@@ -1,0 +1,20 @@
+type Space = record {
+    id: nat32;
+    name: text;
+    iconLink : text;
+    websiteLink : text;
+    voteDelay: nat32;
+    voteDuration: nat32;
+    minVoteRole: nat32;
+    minVotePower: nat64;
+    quorum: nat32;
+};
+
+type Result_1 = variant { Ok : Space; Err : text };
+
+service : {
+    "get_spaces": () -> (vec Space) query;
+    "query_spaces_by_id": (nat64) -> (vec Space) query;
+    "insert_space": (Space) -> (Result_1);
+    "delete_space": (nat64) -> (Result_1);
+}
