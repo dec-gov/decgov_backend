@@ -126,6 +126,3 @@ fn delete_space(id: u32) -> Option<Space> {
         }
     })
 }
-
-
-fn main() {}
