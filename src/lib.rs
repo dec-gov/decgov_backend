@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize};
+use ic_cdk::update;
 use ic_cdk_macros::query;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
@@ -51,7 +52,7 @@ fn get_space(id: u32) -> Option<Space> {
     })
 }
 
-#[query]
+#[update]
 fn insert_space(
     name: String,
     icon_link: String,
@@ -82,7 +83,7 @@ fn insert_space(
     })
 }
 
-#[query]
+#[update]
 fn update_space(
     id: u32,
     name: String,
@@ -114,7 +115,7 @@ fn update_space(
     })
 }
 
-#[query]
+#[update]
 fn delete_space(id: u32) -> Option<Space> {
     SPACES.with(|proposals_ref| {
         let mut proposals = proposals_ref.borrow_mut();

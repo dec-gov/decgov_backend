@@ -10,12 +10,12 @@ type Space = record {
   quorum : nat32;
 };
 service : {
-  delete_space : (nat32) -> (opt Space) query;
+  delete_space : (nat32) -> (opt Space);
   get_space : (nat32) -> (opt Space) query;
   get_spaces : () -> (vec Space) query;
   insert_space : (text, text, text, nat32, nat32, nat32, nat64, nat32) -> (
       Space,
-    ) query;
+    );
   update_space : (
       nat32,
       text,
@@ -26,5 +26,5 @@ service : {
       nat32,
       nat64,
       nat32,
-    ) -> (opt Space) query;
+    ) -> (opt Space);
 }

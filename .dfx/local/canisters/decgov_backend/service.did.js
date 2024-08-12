@@ -11,7 +11,7 @@ export const idlFactory = ({ IDL }) => {
     'quorum' : IDL.Nat32,
   });
   return IDL.Service({
-    'delete_space' : IDL.Func([IDL.Nat32], [IDL.Opt(Space)], ['query']),
+    'delete_space' : IDL.Func([IDL.Nat32], [IDL.Opt(Space)], []),
     'get_space' : IDL.Func([IDL.Nat32], [IDL.Opt(Space)], ['query']),
     'get_spaces' : IDL.Func([], [IDL.Vec(Space)], ['query']),
     'insert_space' : IDL.Func(
@@ -26,7 +26,7 @@ export const idlFactory = ({ IDL }) => {
           IDL.Nat32,
         ],
         [Space],
-        ['query'],
+        [],
       ),
     'update_space' : IDL.Func(
         [
@@ -41,7 +41,7 @@ export const idlFactory = ({ IDL }) => {
           IDL.Nat32,
         ],
         [IDL.Opt(Space)],
-        ['query'],
+        [],
       ),
   });
 };
