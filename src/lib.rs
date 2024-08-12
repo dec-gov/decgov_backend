@@ -1,11 +1,11 @@
 use candid::{CandidType, Deserialize};
+use ic_cdk_macros::query;
+use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
+use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use serde_bytes::ByteBuf;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::str::FromStr;
-use ic_cdk_macros::query;
-use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -61,13 +61,13 @@ fn insert_space(
     min_vote_role: u32,
     min_vote_power: u64,
     quorum: u32,
-)-> Space {
+) -> Space {
     SPACES.with(|proposals_ref| {
         let mut proposals = proposals_ref.borrow_mut();
 
         let id = proposals.len() as u32;
         proposals.push(Space {
-            id,
+            id: id + 1,
             name,
             icon_link,
             website_link,
@@ -126,3 +126,5 @@ fn delete_space(id: u32) -> Option<Space> {
         }
     })
 }
+
+ic_cdk::export_candid!();
