@@ -56,6 +56,7 @@ fn insert_space(
             min_vote_role,
             min_vote_power,
             quorum,
+            options: Vec::new(),
         };
         spaces.insert(id, space.clone());
         space
@@ -89,6 +90,7 @@ fn update_space(
         min_vote_role,
         min_vote_power,
         quorum,
+        options: space.unwrap().options,
     };
 
     delete_space(id);
