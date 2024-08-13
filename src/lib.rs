@@ -1,12 +1,11 @@
-use candid::{CandidType, Deserialize};
+mod types;
+
 use ic_cdk::update;
 use ic_cdk_macros::query;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
-use serde_bytes::ByteBuf;
 use std::cell::RefCell;
-use std::rc::Rc;
-use std::str::FromStr;
+use types::space::Space;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -14,42 +13,23 @@ thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
         RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
 
-    // static SPACES: RefCell<StableBTreeMap<String, Space, Memory>> = RefCell::new(
-    //     StableBTreeMap::init(
-    //         MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))),
-    //     )
-    // );
+    static SPACES: RefCell<StableBTreeMap<u32, Space, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))),
+        )
+    );
 
-    static SPACES: RefCell<Vec<Space>> = RefCell::new(Vec::new());
-}
-
-#[derive(CandidType, Deserialize, Clone, Debug, Eq, PartialEq)]
-pub struct Space {
-    pub id: u32,
-    pub name: String,
-    pub icon_link: String,
-    pub website_link: String,
-    pub vote_delay: u32,
-    pub vote_duration: u32,
-    pub min_vote_role: u32,
-    pub min_vote_power: u64,
-    pub quorum: u32,
+    // static SPACES: RefCell<Vec<Space>> = RefCell::new(Vec::new());
 }
 
 #[query]
-fn get_spaces() -> Vec<Space> {
-    SPACES.with(|proposals_ref| proposals_ref.borrow().clone())
+fn get_spaces() -> Option<Vec<Space>> {
+    Some(SPACES.with(|p| p.borrow().iter().map(|(_, v)| v.clone()).collect()))
 }
 
 #[query]
 fn get_space(id: u32) -> Option<Space> {
-    SPACES.with(|proposals_ref| {
-        proposals_ref
-            .borrow()
-            .iter()
-            .find(|space| space.id == id)
-            .cloned()
-    })
+    SPACES.with(|p| p.borrow().get(&id))
 }
 
 #[update]
@@ -63,12 +43,11 @@ fn insert_space(
     min_vote_power: u64,
     quorum: u32,
 ) -> Space {
-    SPACES.with(|proposals_ref| {
-        let mut proposals = proposals_ref.borrow_mut();
-
-        let id = proposals.len() as u32;
-        proposals.push(Space {
-            id: id + 1,
+    SPACES.with(|spaces_ref| {
+        let mut spaces = spaces_ref.borrow_mut();
+        let id = spaces.len() as u32 + 1;
+        let space = Space {
+            id,
             name,
             icon_link,
             website_link,
@@ -77,9 +56,9 @@ fn insert_space(
             min_vote_role,
             min_vote_power,
             quorum,
-        });
-
-        proposals[id as usize].clone()
+        };
+        spaces.insert(id, space.clone());
+        space
     })
 }
 
@@ -95,36 +74,38 @@ fn update_space(
     min_vote_power: u64,
     quorum: u32,
 ) -> Option<Space> {
-    SPACES.with(|proposals_ref| {
-        let mut proposals = proposals_ref.borrow_mut();
+    let space = get_space(id);
+    if space.is_none() {
+        return None;
+    }
+    // let space = space.unwrap();
+    let new_space = Space {
+        id,
+        name,
+        icon_link,
+        website_link,
+        vote_delay,
+        vote_duration,
+        min_vote_role,
+        min_vote_power,
+        quorum,
+    };
 
-        if let Some(space) = proposals.iter_mut().find(|space| space.id == id) {
-            space.name = name;
-            space.icon_link = icon_link;
-            space.website_link = website_link;
-            space.vote_delay = vote_delay;
-            space.vote_duration = vote_duration;
-            space.min_vote_role = min_vote_role;
-            space.min_vote_power = min_vote_power;
-            space.quorum = quorum;
+    delete_space(id);
 
-            Some(space.clone())
-        } else {
-            None
-        }
-    })
+    SPACES.with(|spaces_ref| {
+        let mut spaces = spaces_ref.borrow_mut();
+        spaces.insert(id, new_space.clone());
+    });
+
+    Some(new_space)
 }
 
 #[update]
 fn delete_space(id: u32) -> Option<Space> {
-    SPACES.with(|proposals_ref| {
-        let mut proposals = proposals_ref.borrow_mut();
-
-        if let Some(index) = proposals.iter().position(|space| space.id == id) {
-            Some(proposals.remove(index))
-        } else {
-            None
-        }
+    SPACES.with(|spaces_ref| {
+        let mut spaces = spaces_ref.borrow_mut();
+        spaces.remove(&id)
     })
 }
 

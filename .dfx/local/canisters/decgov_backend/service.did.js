@@ -13,7 +13,7 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'delete_space' : IDL.Func([IDL.Nat32], [IDL.Opt(Space)], []),
     'get_space' : IDL.Func([IDL.Nat32], [IDL.Opt(Space)], ['query']),
-    'get_spaces' : IDL.Func([], [IDL.Vec(Space)], ['query']),
+    'get_spaces' : IDL.Func([], [IDL.Opt(IDL.Vec(Space))], ['query']),
     'insert_space' : IDL.Func(
         [
           IDL.Text,

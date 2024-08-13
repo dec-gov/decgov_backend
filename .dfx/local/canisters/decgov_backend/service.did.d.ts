@@ -16,7 +16,7 @@ export interface Space {
 export interface _SERVICE {
   'delete_space' : ActorMethod<[number], [] | [Space]>,
   'get_space' : ActorMethod<[number], [] | [Space]>,
-  'get_spaces' : ActorMethod<[], Array<Space>>,
+  'get_spaces' : ActorMethod<[], [] | [Array<Space>]>,
   'insert_space' : ActorMethod<
     [string, string, string, number, number, number, bigint, number],
     Space
