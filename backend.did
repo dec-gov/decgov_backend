@@ -41,6 +41,7 @@ service : {
   delete_space : (nat32) -> (opt Space);
   get_space : (nat32) -> (opt Space) query;
   get_spaces : () -> (opt vec Space) query;
+  insert_proposal : (nat32, text, text, nat32, nat32) -> (opt Proposal);
   insert_space : (text, text, text, nat32, nat32, nat32, nat64, nat32) -> (
       Space,
     );

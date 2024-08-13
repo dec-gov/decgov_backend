@@ -4,6 +4,7 @@ use ic_cdk::update;
 use ic_cdk_macros::query;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
+use types::proposal::Proposal;
 use std::cell::RefCell;
 use types::space::Space;
 
@@ -21,6 +22,8 @@ thread_local! {
 
     // static SPACES: RefCell<Vec<Space>> = RefCell::new(Vec::new());
 }
+
+//SPACES
 
 #[query]
 fn get_spaces() -> Option<Vec<Space>> {
@@ -109,6 +112,38 @@ fn delete_space(id: u32) -> Option<Space> {
         let mut spaces = spaces_ref.borrow_mut();
         spaces.remove(&id)
     })
+}
+
+//PROPOSALS
+#[update]
+fn insert_proposal(
+    space_id: u32,
+    title: String,
+    description: String,
+    date_created: u32,
+    mechanism: u32,
+) -> Option<Proposal> {
+    let space = get_space(space_id);
+    if space.is_none() {
+        return None;
+    }
+    let proposal = types::proposal::Proposal {
+        id: 1,
+        title,
+        description,
+        date_created,
+        mechanism,
+        space_id,
+        options: Vec::new(),
+    };
+
+    SPACES.with(|spaces_ref| {
+        let spaces = spaces_ref.borrow_mut();
+        let mut space = spaces.get(&space_id).unwrap();
+        space.options.push(proposal.clone());
+    });
+
+    Some(proposal)
 }
 
 ic_cdk::export_candid!();

@@ -1,3 +1,30 @@
+type Proposal = record {
+  id : nat32;
+  title : text;
+  date_created : nat32;
+  mechanism : nat32;
+  description : text;
+  options : vec ProposalOption;
+  space_id : nat32;
+};
+type ProposalOption = record {
+  id : nat32;
+  votes : vec ProposalOptionVote;
+  name : text;
+  on_win_contract_address : text;
+  proposal_id : nat32;
+  on_win_bytecode : text;
+  on_win_chain_id : nat32;
+};
+type ProposalOptionVote = record {
+  id : nat32;
+  signature : text;
+  vote_type : nat32;
+  option_id : nat32;
+  user_address : text;
+  timestamp : nat32;
+  voting_power : nat64;
+};
 type Space = record {
   id : nat32;
   vote_delay : nat32;
@@ -8,11 +35,13 @@ type Space = record {
   min_vote_role : nat32;
   min_vote_power : nat64;
   quorum : nat32;
+  options : vec Proposal;
 };
 service : {
   delete_space : (nat32) -> (opt Space);
   get_space : (nat32) -> (opt Space) query;
   get_spaces : () -> (opt vec Space) query;
+  insert_proposal : (nat32, text, text, nat32, nat32) -> (opt Proposal);
   insert_space : (text, text, text, nat32, nat32, nat32, nat64, nat32) -> (
       Space,
     );
