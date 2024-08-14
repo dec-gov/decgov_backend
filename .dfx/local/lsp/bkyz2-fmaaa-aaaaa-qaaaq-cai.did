@@ -1,3 +1,9 @@
+type EvmStrategy = record {
+  strategy_id : nat32;
+  config_str : text;
+  chain_id : nat64;
+  contract_address : text;
+};
 type Proposal = record {
   id : nat32;
   title : text;
@@ -36,6 +42,14 @@ type Space = record {
   min_vote_power : nat64;
   proposals : vec Proposal;
   quorum : nat32;
+  strategies : vec Strategy;
+};
+type Strategy = record {
+  id : nat32;
+  name : text;
+  description : text;
+  evm_strategy : opt EvmStrategy;
+  space_id : nat32;
 };
 service : {
   delete_proposal : (nat32, nat32) -> (opt Proposal);
@@ -48,8 +62,13 @@ service : {
   get_proposals : (nat32) -> (opt vec Proposal) query;
   get_space : (nat32) -> (opt Space) query;
   get_spaces : () -> (opt vec Space) query;
+  get_strategies : (nat32) -> (opt vec Strategy) query;
+  get_strategy : (nat32, nat32) -> (opt Strategy) query;
   get_vote : (nat32, nat32, nat32, nat32) -> (opt ProposalOptionVote) query;
   get_votes : (nat32, nat32, nat32) -> (opt vec ProposalOptionVote) query;
+  insert_evm_strategy : (nat32, nat32, text, text, EvmStrategy) -> (
+      opt Strategy,
+    );
   insert_proposal : (nat32, text, text, nat32, nat32) -> (opt Proposal);
   insert_proposal_option : (nat32, nat32, text, text, text, nat32) -> (
       opt ProposalOption,

@@ -2,6 +2,12 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
+export interface EvmStrategy {
+  'strategy_id' : number,
+  'config_str' : string,
+  'chain_id' : bigint,
+  'contract_address' : string,
+}
 export interface Proposal {
   'id' : number,
   'title' : string,
@@ -40,6 +46,14 @@ export interface Space {
   'min_vote_power' : bigint,
   'proposals' : Array<Proposal>,
   'quorum' : number,
+  'strategies' : Array<Strategy>,
+}
+export interface Strategy {
+  'id' : number,
+  'name' : string,
+  'description' : string,
+  'evm_strategy' : [] | [EvmStrategy],
+  'space_id' : number,
 }
 export interface _SERVICE {
   'delete_proposal' : ActorMethod<[number, number], [] | [Proposal]>,
@@ -64,6 +78,8 @@ export interface _SERVICE {
   'get_proposals' : ActorMethod<[number], [] | [Array<Proposal>]>,
   'get_space' : ActorMethod<[number], [] | [Space]>,
   'get_spaces' : ActorMethod<[], [] | [Array<Space>]>,
+  'get_strategies' : ActorMethod<[number], [] | [Array<Strategy>]>,
+  'get_strategy' : ActorMethod<[number, number], [] | [Strategy]>,
   'get_vote' : ActorMethod<
     [number, number, number, number],
     [] | [ProposalOptionVote]
@@ -71,6 +87,10 @@ export interface _SERVICE {
   'get_votes' : ActorMethod<
     [number, number, number],
     [] | [Array<ProposalOptionVote>]
+  >,
+  'insert_evm_strategy' : ActorMethod<
+    [number, number, string, string, EvmStrategy],
+    [] | [Strategy]
   >,
   'insert_proposal' : ActorMethod<
     [number, string, string, number, number],

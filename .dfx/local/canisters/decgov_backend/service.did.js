@@ -26,6 +26,19 @@ export const idlFactory = ({ IDL }) => {
     'options' : IDL.Vec(ProposalOption),
     'space_id' : IDL.Nat32,
   });
+  const EvmStrategy = IDL.Record({
+    'strategy_id' : IDL.Nat32,
+    'config_str' : IDL.Text,
+    'chain_id' : IDL.Nat64,
+    'contract_address' : IDL.Text,
+  });
+  const Strategy = IDL.Record({
+    'id' : IDL.Nat32,
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'evm_strategy' : IDL.Opt(EvmStrategy),
+    'space_id' : IDL.Nat32,
+  });
   const Space = IDL.Record({
     'id' : IDL.Nat32,
     'vote_delay' : IDL.Nat32,
@@ -37,6 +50,7 @@ export const idlFactory = ({ IDL }) => {
     'min_vote_power' : IDL.Nat64,
     'proposals' : IDL.Vec(Proposal),
     'quorum' : IDL.Nat32,
+    'strategies' : IDL.Vec(Strategy),
   });
   return IDL.Service({
     'delete_proposal' : IDL.Func(
@@ -77,6 +91,16 @@ export const idlFactory = ({ IDL }) => {
       ),
     'get_space' : IDL.Func([IDL.Nat32], [IDL.Opt(Space)], ['query']),
     'get_spaces' : IDL.Func([], [IDL.Opt(IDL.Vec(Space))], ['query']),
+    'get_strategies' : IDL.Func(
+        [IDL.Nat32],
+        [IDL.Opt(IDL.Vec(Strategy))],
+        ['query'],
+      ),
+    'get_strategy' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [IDL.Opt(Strategy)],
+        ['query'],
+      ),
     'get_vote' : IDL.Func(
         [IDL.Nat32, IDL.Nat32, IDL.Nat32, IDL.Nat32],
         [IDL.Opt(ProposalOptionVote)],
@@ -86,6 +110,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat32, IDL.Nat32, IDL.Nat32],
         [IDL.Opt(IDL.Vec(ProposalOptionVote))],
         ['query'],
+      ),
+    'insert_evm_strategy' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32, IDL.Text, IDL.Text, EvmStrategy],
+        [IDL.Opt(Strategy)],
+        [],
       ),
     'insert_proposal' : IDL.Func(
         [IDL.Nat32, IDL.Text, IDL.Text, IDL.Nat32, IDL.Nat32],

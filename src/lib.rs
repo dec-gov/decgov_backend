@@ -9,6 +9,8 @@ use types::proposal::Proposal;
 use types::proposal_option_vote::ProposalOptionVote;
 use types::proposal_options::ProposalOption;
 use types::space::Space;
+use types::strategy::Strategy;
+use types::evm_strategy::{self, EvmStrategy};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -62,6 +64,7 @@ fn insert_space(
             min_vote_power,
             quorum,
             proposals: Vec::new(),
+            strategies: Vec::new()
         };
         spaces.insert(id, space.clone());
         space
@@ -84,6 +87,7 @@ fn update_space(
     if space.is_none() {
         return None;
     }
+    let unwrapped_space = space.unwrap();
     // let space = space.unwrap();
     let new_space = Space {
         id,
@@ -95,7 +99,8 @@ fn update_space(
         min_vote_role,
         min_vote_power,
         quorum,
-        proposals: space.unwrap().proposals,
+        proposals: unwrapped_space.proposals,
+        strategies: unwrapped_space.strategies,
     };
 
     delete_space(id);
@@ -627,6 +632,128 @@ fn delete_vote(
     update_proposal_options(space_id, proposal_id, cloned_options);
 
     Some(vote.clone())
+}
+
+#[query]
+fn get_strategies(space_id: u32) -> Option<Vec<Strategy>> {
+    let space = get_space(space_id);
+    if space.is_none() {
+        return None;
+    }
+    
+    Some(space.unwrap().strategies.clone())
+}
+
+#[query]
+fn get_strategy(space_id: u32,strategy_id: u32) -> Option<Strategy>{
+    let space = get_space(space_id);
+    if space.is_none() {
+        return None;
+    }
+    let strategies = space.unwrap().strategies.clone();
+    let strategy = strategies.iter().find(|s| s.id == strategy_id);
+
+    if strategy.is_none() {
+        return None;
+    }
+    Some(strategy.unwrap().clone())
+
+}
+
+#[update]
+fn insert_evm_strategy(
+    space_id: u32,
+    strategy_id: u32,
+    name: String,
+    description: String,
+    evm_strategy:EvmStrategy,
+) -> Option<Strategy> {
+    let space = get_space(space_id);
+    if space.is_none() {
+        return None;
+    }
+    let mut strategies = space.unwrap().strategies;
+    let id = strategies.len() as u32 + 1;
+    let new_strategy = types::strategy::Strategy {
+        id: id,
+        name,
+        description,
+        space_id,
+        evm_strategy: Some(evm_strategy)
+    };
+
+    strategies.push(new_strategy.clone());
+    update_strategies(space_id, strategies);
+
+    Some(new_strategy)
+}
+
+#[update]
+fn update_strategies(id: u32, strategies: Vec<Strategy>) {
+    let space = get_space(id);
+    if space.is_none() {
+        return;
+    }
+    let space = space.unwrap();
+    let mut new_space = space.clone();
+    new_space.strategies = strategies;
+
+    SPACES.with(|spaces_ref| {
+        let mut spaces = spaces_ref.borrow_mut();
+        spaces.insert(id, new_space.clone());
+    });
+}
+
+#[update]
+fn update_evm_strategy(
+    space_id: u32,
+    strategy_id: u32,
+    name: String,
+    description: String,
+    evm_strategy:EvmStrategy,
+) -> Option<Strategy> {
+    let space = get_space(space_id);
+    if space.is_none() {
+        return None;
+    }
+    let mut strategies = space.unwrap().strategies;
+    let id = strategies.len() as u32 + 1;
+    let new_strategy = types::strategy::Strategy {
+        id: id,
+        name,
+        description,
+        space_id,
+        evm_strategy: Some(evm_strategy)
+    };
+
+    let index = strategies.iter().position(|s| s.id == strategy_id).unwrap();
+    strategies[index] = new_strategy.clone();
+
+    update_strategies(space_id, strategies);
+
+    Some(new_strategy)
+}
+
+#[update]
+fn delete_strategy(space_id: u32, strategy_id: u32) -> Option<Strategy> {
+    let space = get_space(space_id);
+    if space.is_none() {
+        return None;
+    }
+    let strategies = space.unwrap().strategies.clone();
+    let strategy = strategies.iter().find(|s| s.id == strategy_id);
+
+    if strategy.is_none() {
+        return None;
+    }
+
+    let strategy = strategy.unwrap();
+    let index = strategies.iter().position(|p| p.id == strategy_id).unwrap();
+    let mut new_strategies = strategies.clone();
+    new_strategies.remove(index);
+    update_strategies(space_id, new_strategies);
+
+    Some(strategy.clone())
 }
 
 ic_cdk::export_candid!();
