@@ -17,7 +17,7 @@ pub struct Space {
     pub min_vote_role: u32,
     pub min_vote_power: u64,
     pub quorum: u32,
-    pub options: Vec<Proposal>,
+    pub proposals: Vec<Proposal>,
 
 }
 
