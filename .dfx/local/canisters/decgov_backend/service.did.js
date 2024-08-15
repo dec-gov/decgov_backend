@@ -88,7 +88,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'insert_proposal' : IDL.Func(
-        [IDL.Nat32, IDL.Text, IDL.Text, IDL.Nat32, IDL.Nat32],
+        [IDL.Nat32, IDL.Text, IDL.Text, IDL.Nat32, IDL.Vec(ProposalOption)],
         [IDL.Opt(Proposal)],
         [],
       ),
@@ -127,24 +127,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'update_proposal' : IDL.Func(
         [IDL.Nat32, IDL.Nat32, IDL.Text, IDL.Text, IDL.Nat32, IDL.Nat32],
-        [IDL.Opt(Proposal)],
-        [],
-      ),
-    'update_proposal_option' : IDL.Func(
-        [
-          IDL.Nat32,
-          IDL.Nat32,
-          IDL.Nat32,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat32,
-        ],
-        [IDL.Opt(ProposalOption)],
-        [],
-      ),
-    'update_proposal_options' : IDL.Func(
-        [IDL.Nat32, IDL.Nat32, IDL.Vec(ProposalOption)],
         [IDL.Opt(Proposal)],
         [],
       ),

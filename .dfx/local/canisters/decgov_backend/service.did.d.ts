@@ -73,7 +73,7 @@ export interface _SERVICE {
     [] | [Array<ProposalOptionVote>]
   >,
   'insert_proposal' : ActorMethod<
-    [number, string, string, number, number],
+    [number, string, string, number, Array<ProposalOption>],
     [] | [Proposal]
   >,
   'insert_proposal_option' : ActorMethod<
@@ -90,14 +90,6 @@ export interface _SERVICE {
   >,
   'update_proposal' : ActorMethod<
     [number, number, string, string, number, number],
-    [] | [Proposal]
-  >,
-  'update_proposal_option' : ActorMethod<
-    [number, number, number, string, string, string, number],
-    [] | [ProposalOption]
-  >,
-  'update_proposal_options' : ActorMethod<
-    [number, number, Array<ProposalOption>],
     [] | [Proposal]
   >,
   'update_space' : ActorMethod<
