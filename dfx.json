@@ -1,17 +1,22 @@
 {
-    "canisters": {
-      "decgov_backend": {
-        "candid": "backend.did",
-        "package": "decgov_backend",
-        "type": "rust"
+  "canisters": {
+    "decgov_backend": {
+      "candid": "backend.did",
+      "package": "decgov_backend",
+      "type": "rust",
+      "declarations": {
+        "output": "declarations/",
+        "bindings": ["js","ts"],
+        "node_compatibility": true
       }
-    },
-    "defaults": {
-      "build": {
-        "args": "",
-        "packtool": ""
-      }
-    },
-    "output_env_file": ".env",
-    "version": 1
-  }
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
