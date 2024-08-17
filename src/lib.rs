@@ -7,7 +7,7 @@ use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use std::cell::RefCell;
 use types::proposal::Proposal;
 use types::proposal_option_vote::ProposalOptionVote;
-use types::proposal_options::ProposalOption;
+use types::proposal_options::{InsertProposalOption, ProposalOption};
 use types::space::Space;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -139,7 +139,7 @@ fn insert_proposal(
     title: String,
     description: String,
     mechanism: u32,
-    options: Vec<ProposalOption>,
+    options: Vec<InsertProposalOption>,
 ) -> Option<Proposal> {
     let space = get_space(space_id);
     if space.is_none() {
@@ -147,7 +147,24 @@ fn insert_proposal(
     }
     let mut proposals = space.unwrap().proposals;
     let id = proposals.len() as u32 + 1;
-    let date_created = ic_cdk::api::time() as u32;
+    let date_created = ic_cdk::api::time();
+
+    let mut new_options: Vec<ProposalOption> = Vec::new();
+    let mut option_id = 1;
+    
+    for option in options.iter() {
+     new_options.push(ProposalOption {
+        id: option_id,
+        name: option.name.clone(),
+        on_win_contract_address:"".to_string(),
+        on_win_bytecode: "".to_string(),
+        on_win_chain_id: 0,
+        proposal_id: id,
+        votes: Vec::new(),
+     });
+     option_id += 1;
+    }
+
 
     let new_proposal = types::proposal::Proposal {
         id,
@@ -156,7 +173,7 @@ fn insert_proposal(
         date_created,
         mechanism,
         space_id,
-        options: options,
+        options: new_options,
     };
 
     proposals.push(new_proposal.clone());
@@ -194,7 +211,6 @@ fn update_proposal(
     proposal_id: u32,
     title: String,
     description: String,
-    date_created: u32,
     mechanism: u32,
 ) -> Option<Proposal> {
     let space = get_space(space_id);
@@ -211,7 +227,7 @@ fn update_proposal(
         id: proposal_id,
         title,
         description,
-        date_created,
+        date_created: proposal.date_created,
         mechanism,
         space_id,
         options: proposal.options.clone(),

@@ -11,7 +11,7 @@ pub struct Proposal {
    pub id: u32,
    pub title: String,
    pub description: String,
-   pub date_created: u32,
+   pub date_created: u64,
    pub mechanism: u32,
    pub space_id: u32,
    pub options: Vec<ProposalOption>,

@@ -1,7 +1,8 @@
+type InsertProposalOption = record { name : text };
 type Proposal = record {
   id : nat32;
   title : text;
-  date_created : nat32;
+  date_created : nat64;
   mechanism : nat32;
   description : text;
   options : vec ProposalOption;
@@ -50,7 +51,7 @@ service : {
   get_spaces : () -> (opt vec Space) query;
   get_vote : (nat32, nat32, nat32, nat32) -> (opt ProposalOptionVote) query;
   get_votes : (nat32, nat32, nat32) -> (opt vec ProposalOptionVote) query;
-  insert_proposal : (nat32, text, text, nat32, vec ProposalOption) -> (
+  insert_proposal : (nat32, text, text, nat32, vec InsertProposalOption) -> (
       opt Proposal,
     );
   insert_proposal_option : (nat32, nat32, text, text, text, nat32) -> (
@@ -62,7 +63,7 @@ service : {
   insert_vote : (nat32, nat32, nat32, text, nat32, nat32, text, nat64) -> (
       opt ProposalOption,
     );
-  update_proposal : (nat32, nat32, text, text, nat32, nat32) -> (opt Proposal);
+  update_proposal : (nat32, nat32, text, text, nat32) -> (opt Proposal);
   update_space : (
       nat32,
       text,
