@@ -1,17 +1,21 @@
 {
     "canisters": {
-      "decgov_backend": {
-        "candid": "backend.did",
-        "package": "decgov_backend",
-        "type": "rust"
-      }
+        "decgov_backend": {
+            "candid": "backend.did",
+            "package": "decgov_backend",
+            "type": "rust"
+        },
+        "evm_rpc": {
+            "type": "pull",
+            "id": "7hfb6-caaaa-aaaar-qadga-cai"
+        }
     },
     "defaults": {
-      "build": {
-        "args": "",
-        "packtool": ""
-      }
+        "build": {
+            "args": "",
+            "packtool": ""
+        }
     },
     "output_env_file": ".env",
     "version": 1
-  }
+}

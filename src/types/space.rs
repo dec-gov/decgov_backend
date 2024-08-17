@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use super::proposal::Proposal;
 use super::strategy::Strategy;
 
-const MAX_VALUE_SIZE: u32 = 500;
+const MAX_VALUE_SIZE: u32 = 1000;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct Space {
@@ -16,7 +16,7 @@ pub struct Space {
     pub vote_delay: u32,
     pub vote_duration: u32,
     pub min_vote_role: u32,
-    pub min_vote_power: u64,
+    pub min_vote_power: u128,
     pub quorum: u32,
     pub proposals: Vec<Proposal>,
     pub strategies: Vec<Strategy>,

@@ -1,16 +1,20 @@
+mod services;
 mod types;
+mod utils;
 
+use candid::Principal;
 use ic_cdk::update;
 use ic_cdk_macros::query;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use std::cell::RefCell;
+use types::evm_strategy::{self, EvmStrategy};
 use types::proposal::Proposal;
 use types::proposal_option_vote::ProposalOptionVote;
 use types::proposal_options::ProposalOption;
 use types::space::Space;
 use types::strategy::Strategy;
-use types::evm_strategy::{self, EvmStrategy};
+use types::vote::VoteData;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -23,8 +27,7 @@ thread_local! {
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))),
         )
     );
-
-    // static SPACES: RefCell<Vec<Space>> = RefCell::new(Vec::new());
+    pub static ECDSA_KEY: RefCell<String> = RefCell::new(String::default());
 }
 
 //SPACES
@@ -47,7 +50,7 @@ fn insert_space(
     vote_delay: u32,
     vote_duration: u32,
     min_vote_role: u32,
-    min_vote_power: u64,
+    min_vote_power: u128,
     quorum: u32,
 ) -> Space {
     SPACES.with(|spaces_ref| {
@@ -64,7 +67,7 @@ fn insert_space(
             min_vote_power,
             quorum,
             proposals: Vec::new(),
-            strategies: Vec::new()
+            strategies: Vec::new(),
         };
         spaces.insert(id, space.clone());
         space
@@ -80,7 +83,7 @@ fn update_space(
     vote_delay: u32,
     vote_duration: u32,
     min_vote_role: u32,
-    min_vote_power: u64,
+    min_vote_power: u128,
     quorum: u32,
 ) -> Option<Space> {
     let space = get_space(id);
@@ -438,7 +441,7 @@ fn insert_vote(
     vote_type: u32,
     timestamp: u32,
     signature: String,
-    voting_power: u64,
+    voting_power: u128,
 ) -> Option<ProposalOption> {
     let space = get_space(space_id);
     if space.is_none() {
@@ -544,7 +547,7 @@ fn update_vote(
     vote_type: u32,
     timestamp: u32,
     signature: String,
-    voting_power: u64,
+    voting_power: u128,
 ) -> Option<ProposalOptionVote> {
     let space = get_space(space_id);
     if space.is_none() {
@@ -640,12 +643,12 @@ fn get_strategies(space_id: u32) -> Option<Vec<Strategy>> {
     if space.is_none() {
         return None;
     }
-    
+
     Some(space.unwrap().strategies.clone())
 }
 
 #[query]
-fn get_strategy(space_id: u32,strategy_id: u32) -> Option<Strategy>{
+fn get_strategy(space_id: u32, strategy_id: u32) -> Option<Strategy> {
     let space = get_space(space_id);
     if space.is_none() {
         return None;
@@ -657,7 +660,6 @@ fn get_strategy(space_id: u32,strategy_id: u32) -> Option<Strategy>{
         return None;
     }
     Some(strategy.unwrap().clone())
-
 }
 
 #[update]
@@ -666,7 +668,7 @@ fn insert_evm_strategy(
     strategy_id: u32,
     name: String,
     description: String,
-    evm_strategy:EvmStrategy,
+    evm_strategy: EvmStrategy,
 ) -> Option<Strategy> {
     let space = get_space(space_id);
     if space.is_none() {
@@ -679,7 +681,7 @@ fn insert_evm_strategy(
         name,
         description,
         space_id,
-        evm_strategy: Some(evm_strategy)
+        evm_strategy: Some(evm_strategy),
     };
 
     strategies.push(new_strategy.clone());
@@ -710,7 +712,7 @@ fn update_evm_strategy(
     strategy_id: u32,
     name: String,
     description: String,
-    evm_strategy:EvmStrategy,
+    evm_strategy: EvmStrategy,
 ) -> Option<Strategy> {
     let space = get_space(space_id);
     if space.is_none() {
@@ -723,7 +725,7 @@ fn update_evm_strategy(
         name,
         description,
         space_id,
-        evm_strategy: Some(evm_strategy)
+        evm_strategy: Some(evm_strategy),
     };
 
     let index = strategies.iter().position(|s| s.id == strategy_id).unwrap();

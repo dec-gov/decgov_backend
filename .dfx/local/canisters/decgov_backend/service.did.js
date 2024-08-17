@@ -6,7 +6,7 @@ export const idlFactory = ({ IDL }) => {
     'option_id' : IDL.Nat32,
     'user_address' : IDL.Text,
     'timestamp' : IDL.Nat32,
-    'voting_power' : IDL.Nat64,
+    'voting_power' : IDL.Nat,
   });
   const ProposalOption = IDL.Record({
     'id' : IDL.Nat32,
@@ -47,11 +47,23 @@ export const idlFactory = ({ IDL }) => {
     'website_link' : IDL.Text,
     'icon_link' : IDL.Text,
     'min_vote_role' : IDL.Nat32,
-    'min_vote_power' : IDL.Nat64,
+    'min_vote_power' : IDL.Nat,
     'proposals' : IDL.Vec(Proposal),
     'quorum' : IDL.Nat32,
     'strategies' : IDL.Vec(Strategy),
   });
+  const VoteMessage = IDL.Record({
+    'option_id' : IDL.Nat32,
+    'address' : IDL.Text,
+    'proposal_id' : IDL.Nat32,
+    'block_height' : IDL.Opt(IDL.Text),
+    'space_id' : IDL.Nat32,
+  });
+  const VoteData = IDL.Record({
+    'signature' : IDL.Text,
+    'message' : VoteMessage,
+  });
+  const Result = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   return IDL.Service({
     'delete_proposal' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
@@ -64,6 +76,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'delete_space' : IDL.Func([IDL.Nat32], [IDL.Opt(Space)], []),
+    'delete_strategy' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [IDL.Opt(Strategy)],
+        [],
+      ),
     'delete_vote' : IDL.Func(
         [IDL.Nat32, IDL.Nat32, IDL.Nat32, IDL.Nat32],
         [IDL.Opt(ProposalOptionVote)],
@@ -134,7 +151,7 @@ export const idlFactory = ({ IDL }) => {
           IDL.Nat32,
           IDL.Nat32,
           IDL.Nat32,
-          IDL.Nat64,
+          IDL.Nat,
           IDL.Nat32,
         ],
         [Space],
@@ -149,9 +166,14 @@ export const idlFactory = ({ IDL }) => {
           IDL.Nat32,
           IDL.Nat32,
           IDL.Text,
-          IDL.Nat64,
+          IDL.Nat,
         ],
         [IDL.Opt(ProposalOption)],
+        [],
+      ),
+    'update_evm_strategy' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32, IDL.Text, IDL.Text, EvmStrategy],
+        [IDL.Opt(Strategy)],
         [],
       ),
     'update_proposal' : IDL.Func(
@@ -186,13 +208,14 @@ export const idlFactory = ({ IDL }) => {
           IDL.Nat32,
           IDL.Nat32,
           IDL.Nat32,
-          IDL.Nat64,
+          IDL.Nat,
           IDL.Nat32,
         ],
         [IDL.Opt(Space)],
         [],
       ),
     'update_space_proposals' : IDL.Func([IDL.Nat32, IDL.Vec(Proposal)], [], []),
+    'update_strategies' : IDL.Func([IDL.Nat32, IDL.Vec(Strategy)], [], []),
     'update_vote' : IDL.Func(
         [
           IDL.Nat32,
@@ -203,9 +226,15 @@ export const idlFactory = ({ IDL }) => {
           IDL.Nat32,
           IDL.Nat32,
           IDL.Text,
-          IDL.Nat64,
+          IDL.Nat,
         ],
         [IDL.Opt(ProposalOptionVote)],
+        [],
+      ),
+    'vote' : IDL.Func([VoteData], [Result], []),
+    'voting_power' : IDL.Func(
+        [IDL.Text, IDL.Nat32, IDL.Opt(IDL.Text)],
+        [Result],
         [],
       ),
   });

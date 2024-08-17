@@ -4,7 +4,7 @@ use std::borrow::Cow;
 
 use super::proposal_option_vote::ProposalOptionVote;
 
-const MAX_VALUE_SIZE: u32 = 500;
+const MAX_VALUE_SIZE: u32 = 1000;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 

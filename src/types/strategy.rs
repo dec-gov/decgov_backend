@@ -4,7 +4,7 @@ use std::borrow::Cow;
 
 use super::evm_strategy::EvmStrategy;
 
-const MAX_VALUE_SIZE: u32 = 500;
+const MAX_VALUE_SIZE: u32 = 1000;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct Strategy {

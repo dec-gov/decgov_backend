@@ -2,7 +2,7 @@ use candid::{CandidType, Decode, Deserialize, Encode};
 use ic_stable_structures::{storable::Bound, Storable};
 use std::borrow::Cow;
 
-const MAX_VALUE_SIZE: u32 = 500;
+const MAX_VALUE_SIZE: u32 = 1000;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 
@@ -12,7 +12,7 @@ pub struct ProposalOptionVote {
     pub vote_type: u32,
     pub timestamp: u32,
     pub signature: String,
-    pub voting_power: u64,
+    pub voting_power: u128,
     pub option_id: u32,
 }
 

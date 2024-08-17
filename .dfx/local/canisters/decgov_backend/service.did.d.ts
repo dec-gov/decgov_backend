@@ -35,6 +35,8 @@ export interface ProposalOptionVote {
   'timestamp' : number,
   'voting_power' : bigint,
 }
+export type Result = { 'Ok' : string } |
+  { 'Err' : string };
 export interface Space {
   'id' : number,
   'vote_delay' : number,
@@ -55,6 +57,14 @@ export interface Strategy {
   'evm_strategy' : [] | [EvmStrategy],
   'space_id' : number,
 }
+export interface VoteData { 'signature' : string, 'message' : VoteMessage }
+export interface VoteMessage {
+  'option_id' : number,
+  'address' : string,
+  'proposal_id' : number,
+  'block_height' : [] | [string],
+  'space_id' : number,
+}
 export interface _SERVICE {
   'delete_proposal' : ActorMethod<[number, number], [] | [Proposal]>,
   'delete_proposal_option' : ActorMethod<
@@ -62,6 +72,7 @@ export interface _SERVICE {
     [] | [ProposalOption]
   >,
   'delete_space' : ActorMethod<[number], [] | [Space]>,
+  'delete_strategy' : ActorMethod<[number, number], [] | [Strategy]>,
   'delete_vote' : ActorMethod<
     [number, number, number, number],
     [] | [ProposalOptionVote]
@@ -108,6 +119,10 @@ export interface _SERVICE {
     [number, number, number, string, number, number, string, bigint],
     [] | [ProposalOption]
   >,
+  'update_evm_strategy' : ActorMethod<
+    [number, number, string, string, EvmStrategy],
+    [] | [Strategy]
+  >,
   'update_proposal' : ActorMethod<
     [number, number, string, string, number, number],
     [] | [Proposal]
@@ -125,10 +140,13 @@ export interface _SERVICE {
     [] | [Space]
   >,
   'update_space_proposals' : ActorMethod<[number, Array<Proposal>], undefined>,
+  'update_strategies' : ActorMethod<[number, Array<Strategy>], undefined>,
   'update_vote' : ActorMethod<
     [number, number, number, number, string, number, number, string, bigint],
     [] | [ProposalOptionVote]
   >,
+  'vote' : ActorMethod<[VoteData], Result>,
+  'voting_power' : ActorMethod<[string, number, [] | [string]], Result>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];
