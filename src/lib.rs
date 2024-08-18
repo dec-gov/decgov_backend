@@ -2,7 +2,7 @@ mod services;
 mod types;
 mod utils;
 
-use candid::Principal;
+use candid::{Nat, Principal};
 use ic_cdk::update;
 use ic_cdk_macros::query;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
@@ -439,9 +439,9 @@ fn insert_vote(
     option_id: u32,
     user_address: String,
     vote_type: u32,
-    timestamp: u32,
+    timestamp: u64,
     signature: String,
-    voting_power: u128,
+    voting_power: Nat,
 ) -> Option<ProposalOption> {
     let space = get_space(space_id);
     if space.is_none() {
@@ -545,9 +545,9 @@ fn update_vote(
     vote_id: u32,
     user_address: String,
     vote_type: u32,
-    timestamp: u32,
+    timestamp: u64,
     signature: String,
-    voting_power: u128,
+    voting_power: Nat,
 ) -> Option<ProposalOptionVote> {
     let space = get_space(space_id);
     if space.is_none() {

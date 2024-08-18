@@ -5,7 +5,7 @@ export const idlFactory = ({ IDL }) => {
     'vote_type' : IDL.Nat32,
     'option_id' : IDL.Nat32,
     'user_address' : IDL.Text,
-    'timestamp' : IDL.Nat32,
+    'timestamp' : IDL.Nat64,
     'voting_power' : IDL.Nat,
   });
   const ProposalOption = IDL.Record({
@@ -63,7 +63,7 @@ export const idlFactory = ({ IDL }) => {
     'signature' : IDL.Text,
     'message' : VoteMessage,
   });
-  const Result = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
+  const Result = IDL.Variant({ 'Ok' : IDL.Nat, 'Err' : IDL.Text });
   return IDL.Service({
     'delete_proposal' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
@@ -164,7 +164,7 @@ export const idlFactory = ({ IDL }) => {
           IDL.Nat32,
           IDL.Text,
           IDL.Nat32,
-          IDL.Nat32,
+          IDL.Nat64,
           IDL.Text,
           IDL.Nat,
         ],
@@ -224,7 +224,7 @@ export const idlFactory = ({ IDL }) => {
           IDL.Nat32,
           IDL.Text,
           IDL.Nat32,
-          IDL.Nat32,
+          IDL.Nat64,
           IDL.Text,
           IDL.Nat,
         ],

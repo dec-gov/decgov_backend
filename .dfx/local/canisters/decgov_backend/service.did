@@ -28,10 +28,10 @@ type ProposalOptionVote = record {
   vote_type : nat32;
   option_id : nat32;
   user_address : text;
-  timestamp : nat32;
+  timestamp : nat64;
   voting_power : nat;
 };
-type Result = variant { Ok : text; Err : text };
+type Result = variant { Ok : nat; Err : text };
 type Space = record {
   id : nat32;
   vote_delay : nat32;
@@ -84,7 +84,7 @@ service : {
       opt ProposalOption,
     );
   insert_space : (text, text, text, nat32, nat32, nat32, nat, nat32) -> (Space);
-  insert_vote : (nat32, nat32, nat32, text, nat32, nat32, text, nat) -> (
+  insert_vote : (nat32, nat32, nat32, text, nat32, nat64, text, nat) -> (
       opt ProposalOption,
     );
   update_evm_strategy : (nat32, nat32, text, text, EvmStrategy) -> (
@@ -102,7 +102,7 @@ service : {
     );
   update_space_proposals : (nat32, vec Proposal) -> ();
   update_strategies : (nat32, vec Strategy) -> ();
-  update_vote : (nat32, nat32, nat32, nat32, text, nat32, nat32, text, nat) -> (
+  update_vote : (nat32, nat32, nat32, nat32, text, nat32, nat64, text, nat) -> (
       opt ProposalOptionVote,
     );
   vote : (VoteData) -> (Result);

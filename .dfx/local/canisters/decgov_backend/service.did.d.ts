@@ -32,10 +32,10 @@ export interface ProposalOptionVote {
   'vote_type' : number,
   'option_id' : number,
   'user_address' : string,
-  'timestamp' : number,
+  'timestamp' : bigint,
   'voting_power' : bigint,
 }
-export type Result = { 'Ok' : string } |
+export type Result = { 'Ok' : bigint } |
   { 'Err' : string };
 export interface Space {
   'id' : number,
@@ -116,7 +116,7 @@ export interface _SERVICE {
     Space
   >,
   'insert_vote' : ActorMethod<
-    [number, number, number, string, number, number, string, bigint],
+    [number, number, number, string, number, bigint, string, bigint],
     [] | [ProposalOption]
   >,
   'update_evm_strategy' : ActorMethod<
@@ -142,7 +142,7 @@ export interface _SERVICE {
   'update_space_proposals' : ActorMethod<[number, Array<Proposal>], undefined>,
   'update_strategies' : ActorMethod<[number, Array<Strategy>], undefined>,
   'update_vote' : ActorMethod<
-    [number, number, number, number, string, number, number, string, bigint],
+    [number, number, number, number, string, number, bigint, string, bigint],
     [] | [ProposalOptionVote]
   >,
   'vote' : ActorMethod<[VoteData], Result>,

@@ -1,8 +1,11 @@
 use std::{
     collections::HashMap,
+    num::ParseIntError,
+    str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use candid::Nat;
 use ethers_core::types::{Address, Signature};
 use ic_cdk::{
     api::management_canister::http_request::{
@@ -19,9 +22,12 @@ use crate::{
 use super::eth_rpc::eth_call;
 
 #[update]
-async fn vote(data: VoteData) -> Result<String, String> {
+async fn vote(data: VoteData) -> Result<Nat, String> {
     let message_json = serde_json::to_string(&data.message).unwrap();
     let signature = data.signature.parse::<Signature>().unwrap();
+
+    // let recovered_address = signature.recover(message_json).unwrap();
+    // let parsed_address = data.message.address.parse::<Address>().unwrap();
 
     // let recovered_address = signature.recover(message_json).unwrap();
     // let parsed_address = data.message.address.parse::<Address>().unwrap();
@@ -38,11 +44,19 @@ async fn vote(data: VoteData) -> Result<String, String> {
         .parse::<Address>()
         .unwrap();
 
+    // if recovered_address != parsed_address {
+    //     return Err("Invalid signature".to_owned());
+    // }
+
+    // if !data.message.address.starts_with("0x") {
+    //     return Err("Only Ethereum address is supported for now".into());
+    // }
+
     let voting_power = get_voting_power(&recovered_address, data.message.space_id, None)
         .await
         .unwrap();
 
-    if voting_power == 0 {
+    if voting_power == 0 as u32 {
         return Err("Insufficient voting power".to_owned());
     }
 
@@ -62,13 +76,12 @@ async fn vote(data: VoteData) -> Result<String, String> {
         data.message.option_id,
         data.message.address,
         0,
-        // TODO: bigger format
-        (ic_cdk::api::time() / 1_000_000_000) as u32,
+        (ic_cdk::api::time() / 1_000_000_000),
         data.signature,
-        voting_power,
+        voting_power.clone(),
     );
 
-    Ok(voting_power.to_string())
+    Ok(voting_power)
 }
 
 #[update]
@@ -76,26 +89,26 @@ async fn voting_power(
     address: String,
     space_id: u32,
     block_height: Option<String>,
-) -> Result<String, String> {
+) -> Result<Nat, String> {
     let voting_power = get_voting_power(&address.parse().unwrap(), space_id, block_height)
         .await
         .unwrap();
 
-    Ok(voting_power.to_string())
+    Ok(voting_power)
 }
 
 async fn get_voting_power(
     address: &Address,
     space_id: u32,
     block_height: Option<String>,
-) -> Result<u128, String> {
+) -> Result<Nat, String> {
     let strategies: Vec<Strategy> = get_strategies(space_id)
         .unwrap()
         .into_iter()
         .filter(|s| s.space_id == space_id)
         .collect();
 
-    let mut total_voting_power = 0;
+    let mut total_voting_power = Nat::from(0 as u32);
 
     for strategy in strategies {
         let voting_power = call_strategy(&address, &strategy, block_height.clone()).await?;
@@ -143,7 +156,7 @@ async fn call_strategy(
     address: &Address,
     strategy: &Strategy,
     block_height: Option<String>,
-) -> Result<u128, String> {
+) -> Result<Nat, String> {
     if strategy.evm_strategy.is_none() {
         return Err("Only EVM strategies are supported for now".into());
     }
@@ -159,7 +172,13 @@ async fn call_strategy(
     let response = eth_call(evm_strategy.contract_address.clone(), data, block_height).await;
 
     if let Ok(value) = response {
-        Ok(u128::from_str_radix(&value.trim_start_matches("0x"), 16).unwrap())
+        if value == "0x" {
+            return Ok(Nat::from(0 as u8));
+        }
+
+        Ok(Nat::from(
+            u128::from_str_radix(&value.trim_start_matches("0x"), 16).unwrap(),
+        ))
     } else {
         Err("Unable to parse response from contract call".into())
     }

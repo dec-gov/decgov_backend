@@ -31,7 +31,7 @@ type ProposalOptionVote = record {
   timestamp : nat32;
   voting_power : nat;
 };
-type Result = variant { Ok : text; Err : text };
+type Result = variant { Ok : nat; Err : text };
 type Space = record {
   id : nat32;
   vote_delay : nat32;
