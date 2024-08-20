@@ -1,4 +1,4 @@
-use candid::{CandidType, Decode, Deserialize, Encode};
+use candid::{CandidType, Decode, Deserialize, Encode, Nat};
 use ic_stable_structures::{storable::Bound, Storable};
 use std::borrow::Cow;
 
@@ -12,7 +12,7 @@ pub struct ProposalOptionVote {
     pub vote_type: u32,
     pub timestamp: u32,
     pub signature: String,
-    pub voting_power: u64,
+    pub voting_power: Nat,
     pub option_id: u32,
 }
 

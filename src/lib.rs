@@ -1,5 +1,6 @@
 mod types;
 
+use candid::Nat;
 use ic_cdk::update;
 use ic_cdk_macros::query;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
@@ -45,8 +46,8 @@ fn insert_space(
     vote_delay: u32,
     vote_duration: u32,
     min_vote_role: u32,
-    min_vote_power: u64,
-    quorum: u32,
+    min_vote_power: Nat,
+    quorum: Nat,
 ) -> Space {
     SPACES.with(|spaces_ref| {
         let mut spaces = spaces_ref.borrow_mut();
@@ -77,8 +78,8 @@ fn update_space(
     vote_delay: u32,
     vote_duration: u32,
     min_vote_role: u32,
-    min_vote_power: u64,
-    quorum: u32,
+    min_vote_power: Nat,
+    quorum: Nat,
 ) -> Option<Space> {
     let space = get_space(id);
     if space.is_none() {
@@ -147,7 +148,8 @@ fn insert_proposal(
     }
     let mut proposals = space.unwrap().proposals;
     let id = proposals.len() as u32 + 1;
-    let date_created = ic_cdk::api::time();
+    // Convert nanoseconds to seconds
+    let date_created = ic_cdk::api::time() / 1_000_000_000;
 
     let mut new_options: Vec<ProposalOption> = Vec::new();
     let mut option_id = 1;
@@ -410,7 +412,7 @@ fn insert_vote(
     vote_type: u32,
     timestamp: u32,
     signature: String,
-    voting_power: u64,
+    voting_power: Nat,
 ) -> Option<ProposalOption> {
     let space = get_space(space_id);
     if space.is_none() {
@@ -516,7 +518,7 @@ fn update_vote(
     vote_type: u32,
     timestamp: u32,
     signature: String,
-    voting_power: u64,
+    voting_power: Nat,
 ) -> Option<ProposalOptionVote> {
     let space = get_space(space_id);
     if space.is_none() {

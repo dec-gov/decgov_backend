@@ -24,7 +24,7 @@ type ProposalOptionVote = record {
   option_id : nat32;
   user_address : text;
   timestamp : nat32;
-  voting_power : nat64;
+  voting_power : nat;
 };
 type Space = record {
   id : nat32;
@@ -34,9 +34,9 @@ type Space = record {
   website_link : text;
   icon_link : text;
   min_vote_role : nat32;
-  min_vote_power : nat64;
+  min_vote_power : nat;
   proposals : vec Proposal;
-  quorum : nat32;
+  quorum : nat;
 };
 service : {
   delete_proposal : (nat32, nat32) -> (opt Proposal);
@@ -57,34 +57,16 @@ service : {
   insert_proposal_option : (nat32, nat32, text, text, text, nat32) -> (
       opt ProposalOption,
     );
-  insert_space : (text, text, text, nat32, nat32, nat32, nat64, nat32) -> (
-      Space,
-    );
-  insert_vote : (nat32, nat32, nat32, text, nat32, nat32, text, nat64) -> (
+  insert_space : (text, text, text, nat32, nat32, nat32, nat, nat) -> (Space);
+  insert_vote : (nat32, nat32, nat32, text, nat32, nat32, text, nat) -> (
       opt ProposalOption,
     );
   update_proposal : (nat32, nat32, text, text, nat32) -> (opt Proposal);
-  update_space : (
-      nat32,
-      text,
-      text,
-      text,
-      nat32,
-      nat32,
-      nat32,
-      nat64,
-      nat32,
-    ) -> (opt Space);
+  update_space : (nat32, text, text, text, nat32, nat32, nat32, nat, nat) -> (
+      opt Space,
+    );
   update_space_proposals : (nat32, vec Proposal) -> ();
-  update_vote : (
-      nat32,
-      nat32,
-      nat32,
-      nat32,
-      text,
-      nat32,
-      nat32,
-      text,
-      nat64,
-    ) -> (opt ProposalOptionVote);
+  update_vote : (nat32, nat32, nat32, nat32, text, nat32, nat32, text, nat) -> (
+      opt ProposalOptionVote,
+    );
 }
