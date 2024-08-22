@@ -2,3 +2,8 @@ pub mod proposal;
 pub mod proposal_option_vote;
 pub mod proposal_options;
 pub mod space;
+pub mod strategy;
+pub mod evm_strategy;
+pub mod vote;
+pub mod event;
+pub mod eth_rpc;

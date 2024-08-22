@@ -3,8 +3,9 @@ use ic_stable_structures::{storable::Bound, Storable};
 use std::borrow::Cow;
 
 use super::proposal::Proposal;
+use super::strategy::Strategy;
 
-const MAX_VALUE_SIZE: u32 = 500;
+const MAX_VALUE_SIZE: u32 = 1000;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct Space {
@@ -18,6 +19,7 @@ pub struct Space {
     pub min_vote_power: Nat,
     pub quorum: Nat,
     pub proposals: Vec<Proposal>,
+    pub strategies: Vec<Strategy>,
 
 }
 

@@ -2,23 +2,17 @@ use candid::{CandidType, Decode, Deserialize, Encode};
 use ic_stable_structures::{storable::Bound, Storable};
 use std::borrow::Cow;
 
-use super::proposal_options::ProposalOption;
-
 const MAX_VALUE_SIZE: u32 = 1000;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct Proposal {
-   pub id: u32,
-   pub title: String,
-   pub description: String,
-   pub date_created: u64,
-   pub mechanism: u32,
-   pub space_id: u32,
-   pub options: Vec<ProposalOption>,
+pub struct EvmStrategy {
+    pub strategy_id: u32,
+    pub chain_id: u64,
+    pub contract_address: String,
+    pub config_str: String,
 }
 
-
-impl Storable for Proposal {
+impl Storable for EvmStrategy{
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }

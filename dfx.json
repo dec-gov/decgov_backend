@@ -1,22 +1,26 @@
 {
-  "canisters": {
-    "decgov_backend": {
-      "candid": "backend.did",
-      "package": "decgov_backend",
-      "type": "rust",
-      "declarations": {
-        "output": "declarations/",
-        "bindings": ["js","ts"],
-        "node_compatibility": true
-      }
-    }
-  },
-  "defaults": {
-    "build": {
-      "args": "",
-      "packtool": ""
-    }
-  },
-  "output_env_file": ".env",
-  "version": 1
+    "canisters": {
+        "decgov_backend": {
+            "candid": "backend.did",
+            "package": "decgov_backend",
+            "type": "rust",
+            "declarations": {
+                "output": "declarations/",
+                "bindings": ["js", "ts"],
+                "node_compatibility": true
+            }
+        },
+        "evm_rpc": {
+            "type": "pull",
+            "id": "7hfb6-caaaa-aaaar-qadga-cai"
+        }
+    },
+    "defaults": {
+        "build": {
+            "args": "",
+            "packtool": ""
+        }
+    },
+    "output_env_file": ".env",
+    "version": 1
 }
