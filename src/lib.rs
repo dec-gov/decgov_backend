@@ -11,7 +11,7 @@ use std::cell::RefCell;
 use types::evm_strategy::{self, EvmStrategy};
 use types::proposal::Proposal;
 use types::proposal_option_vote::ProposalOptionVote;
-use types::proposal_options::ProposalOption;
+use types::proposal_options::{InsertProposalOption, ProposalOption};
 use types::space::Space;
 use types::strategy::Strategy;
 use types::vote::VoteData;
@@ -50,8 +50,8 @@ fn insert_space(
     vote_delay: u32,
     vote_duration: u32,
     min_vote_role: u32,
-    min_vote_power: u128,
-    quorum: u32,
+    min_vote_power: Nat,
+    quorum: Nat,
 ) -> Space {
     SPACES.with(|spaces_ref| {
         let mut spaces = spaces_ref.borrow_mut();
@@ -83,8 +83,8 @@ fn update_space(
     vote_delay: u32,
     vote_duration: u32,
     min_vote_role: u32,
-    min_vote_power: u128,
-    quorum: u32,
+    min_vote_power: Nat,
+    quorum: Nat,
 ) -> Option<Space> {
     let space = get_space(id);
     if space.is_none() {
@@ -146,8 +146,8 @@ fn insert_proposal(
     space_id: u32,
     title: String,
     description: String,
-    date_created: u32,
     mechanism: u32,
+    options: Vec<InsertProposalOption>,
 ) -> Option<Proposal> {
     let space = get_space(space_id);
     if space.is_none() {
@@ -155,14 +155,34 @@ fn insert_proposal(
     }
     let mut proposals = space.unwrap().proposals;
     let id = proposals.len() as u32 + 1;
+    // Convert nanoseconds to seconds
+    let date_created = ic_cdk::api::time() / 1_000_000_000;
+
+    let mut new_options: Vec<ProposalOption> = Vec::new();
+    let mut option_id = 1;
+    
+    for option in options.iter() {
+     new_options.push(ProposalOption {
+        id: option_id,
+        name: option.name.clone(),
+        on_win_contract_address:"".to_string(),
+        on_win_bytecode: "".to_string(),
+        on_win_chain_id: 0,
+        proposal_id: id,
+        votes: Vec::new(),
+     });
+     option_id += 1;
+    }
+
+
     let new_proposal = types::proposal::Proposal {
-        id: id,
+        id,
         title,
         description,
         date_created,
         mechanism,
         space_id,
-        options: Vec::new(),
+        options: new_options,
     };
 
     proposals.push(new_proposal.clone());
@@ -200,7 +220,6 @@ fn update_proposal(
     proposal_id: u32,
     title: String,
     description: String,
-    date_created: u32,
     mechanism: u32,
 ) -> Option<Proposal> {
     let space = get_space(space_id);
@@ -217,7 +236,7 @@ fn update_proposal(
         id: proposal_id,
         title,
         description,
-        date_created,
+        date_created: proposal.date_created,
         mechanism,
         space_id,
         options: proposal.options.clone(),
@@ -250,7 +269,7 @@ fn delete_proposal(space_id: u32, proposal_id: u32) -> Option<Proposal> {
     Some(proposal.clone())
 }
 
-#[update]
+//Options must not be editable from outside
 fn update_proposal_options(
     space_id: u32,
     proposal_id: u32,
@@ -357,48 +376,7 @@ fn get_proposal_option(space_id: u32, proposal_id: u32, option_id: u32) -> Optio
     Some(option.unwrap().clone())
 }
 
-#[update]
-fn update_proposal_option(
-    space_id: u32,
-    proposal_id: u32,
-    option_id: u32,
-    name: String,
-    on_win_contract_address: String,
-    on_win_bytecode: String,
-    on_win_chain_id: u32,
-) -> Option<ProposalOption> {
-    let space = get_space(space_id);
-    if space.is_none() {
-        return None;
-    }
-    let mut proposals = space.unwrap().proposals;
-    let proposal = proposals.iter_mut().find(|p| p.id == proposal_id);
-    if proposal.is_none() {
-        return None;
-    }
-    let proposal = proposal.unwrap();
-    let mut options = proposal.options.clone();
-    let option = options.iter_mut().find(|o| o.id == option_id);
-    if option.is_none() {
-        return None;
-    }
-    let option = option.unwrap();
-    let new_option = ProposalOption {
-        id: option_id,
-        name,
-        on_win_contract_address,
-        on_win_bytecode,
-        on_win_chain_id,
-        proposal_id,
-        votes: option.votes.clone(),
-    };
-
-    let index = options.iter().position(|o| o.id == option_id).unwrap();
-    options[index] = new_option.clone();
-    update_proposal_options(space_id, proposal_id, options);
-
-    Some(new_option)
-}
+//Options must not be editable from outside
 
 #[update]
 fn delete_proposal_option(

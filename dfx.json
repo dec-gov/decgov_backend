@@ -3,7 +3,12 @@
         "decgov_backend": {
             "candid": "backend.did",
             "package": "decgov_backend",
-            "type": "rust"
+            "type": "rust",
+            "declarations": {
+                "output": "declarations/",
+                "bindings": ["js", "ts"],
+                "node_compatibility": true
+            }
         },
         "evm_rpc": {
             "type": "pull",

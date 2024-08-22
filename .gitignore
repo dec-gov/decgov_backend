@@ -48,3 +48,6 @@ lerna-debug.log*
 
 # Makefiles
 Makefile.prod
+/target
+
+declarations

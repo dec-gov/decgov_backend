@@ -1,4 +1,4 @@
-use candid::{CandidType, Decode, Deserialize, Encode};
+use candid::{CandidType, Decode, Deserialize, Encode, Nat};
 use ic_stable_structures::{storable::Bound, Storable};
 use std::borrow::Cow;
 
@@ -16,8 +16,8 @@ pub struct Space {
     pub vote_delay: u32,
     pub vote_duration: u32,
     pub min_vote_role: u32,
-    pub min_vote_power: u128,
-    pub quorum: u32,
+    pub min_vote_power: Nat,
+    pub quorum: Nat,
     pub proposals: Vec<Proposal>,
     pub strategies: Vec<Strategy>,
 
