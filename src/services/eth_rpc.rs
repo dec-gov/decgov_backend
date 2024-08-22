@@ -274,11 +274,3 @@ pub async fn get_self_eth_address() -> String {
 
     SELF_ETH_ADDRESS.with(|maybe_address| maybe_address.borrow().clone().unwrap())
 }
-
-pub fn from_hex(data: &str) -> Result<Vec<u8>, FromHexError> {
-    hex::decode(&data[2..])
-}
-
-pub fn to_hex(data: &[u8]) -> String {
-    format!("0x{}", hex::encode(data))
-}

@@ -1,9 +1,4 @@
-use std::{
-    collections::HashMap,
-    num::ParseIntError,
-    str::FromStr,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::collections::HashMap;
 
 use candid::Nat;
 use ethers_core::types::{Address, Signature};
@@ -15,8 +10,8 @@ use ic_cdk::{
 };
 
 use crate::{
-    get_spaces, get_strategies, insert_proposal_option, insert_vote,
-    types::{event::Event, evm_strategy::EvmStrategy, strategy::Strategy, vote::VoteData},
+    get_strategies, insert_vote,
+    types::{event::Event, strategy::Strategy, vote::VoteData},
 };
 
 use super::eth_rpc::eth_call;
@@ -26,31 +21,16 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
     let message_json = serde_json::to_string(&data.message).unwrap();
     let signature = data.signature.parse::<Signature>().unwrap();
 
-    // let recovered_address = signature.recover(message_json).unwrap();
-    // let parsed_address = data.message.address.parse::<Address>().unwrap();
+    let recovered_address = signature.recover(message_json).unwrap();
+    let parsed_address = data.message.address.parse::<Address>().unwrap();
 
-    // let recovered_address = signature.recover(message_json).unwrap();
-    // let parsed_address = data.message.address.parse::<Address>().unwrap();
+    if recovered_address != parsed_address {
+        return Err("Invalid signature".to_owned());
+    }
 
-    // if recovered_address != parsed_address {
-    //     return Err("Invalid signature".to_owned());
-    // }
-
-    // if !data.message.address.starts_with("0x") {
-    //     return Err("Only Ethereum address is supported for now".into());
-    // }
-
-    let recovered_address = "0xbf7e8a87557e4fd205c376dedbe20f900e7c9704"
-        .parse::<Address>()
-        .unwrap();
-
-    // if recovered_address != parsed_address {
-    //     return Err("Invalid signature".to_owned());
-    // }
-
-    // if !data.message.address.starts_with("0x") {
-    //     return Err("Only Ethereum address is supported for now".into());
-    // }
+    if !data.message.address.starts_with("0x") {
+        return Err("Only Ethereum address is supported for now".into());
+    }
 
     let voting_power = get_voting_power(&recovered_address, data.message.space_id, None)
         .await
@@ -76,7 +56,7 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         data.message.option_id,
         data.message.address,
         0,
-        (ic_cdk::api::time() / 1_000_000_000),
+        ic_cdk::api::time() / 1_000_000_000,
         data.signature,
         voting_power.clone(),
     );
