@@ -1,3 +1,9 @@
+type Event = record {
+  webhook_url : text;
+  event_type : nat32;
+  payload : text;
+  space_id : nat32;
+};
 type EvmStrategy = record {
   strategy_id : nat32;
   config_str : text;
@@ -39,6 +45,7 @@ type Space = record {
   vote_duration : nat32;
   name : text;
   website_link : text;
+  events : vec Event;
   icon_link : text;
   min_vote_role : nat32;
   min_vote_power : nat;
@@ -67,6 +74,7 @@ service : {
   delete_space : (nat32) -> (opt Space);
   delete_strategy : (nat32, nat32) -> (opt Strategy);
   delete_vote : (nat32, nat32, nat32, nat32) -> (opt ProposalOptionVote);
+  get_events_by_space : (nat32) -> (opt vec Event) query;
   get_proposal : (nat32, nat32) -> (opt Proposal) query;
   get_proposal_option : (nat32, nat32, nat32) -> (opt ProposalOption) query;
   get_proposal_options : (nat32, nat32) -> (opt vec ProposalOption) query;
@@ -77,6 +85,7 @@ service : {
   get_strategy : (nat32, nat32) -> (opt Strategy) query;
   get_vote : (nat32, nat32, nat32, nat32) -> (opt ProposalOptionVote) query;
   get_votes : (nat32, nat32, nat32) -> (opt vec ProposalOptionVote) query;
+  insert_event : (nat32, nat32, text, text) -> (opt Event);
   insert_evm_strategy : (nat32, nat32, text, text, EvmStrategy) -> (
       opt Strategy,
     );
