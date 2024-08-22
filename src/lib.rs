@@ -68,6 +68,7 @@ fn insert_space(
             quorum,
             proposals: Vec::new(),
             strategies: Vec::new(),
+            events: Vec::new(),
         };
         spaces.insert(id, space.clone());
         space
@@ -104,6 +105,7 @@ fn update_space(
         quorum,
         proposals: unwrapped_space.proposals,
         strategies: unwrapped_space.strategies,
+        events: unwrapped_space.events,
     };
 
     delete_space(id);
@@ -140,6 +142,21 @@ fn delete_space(id: u32) -> Option<Space> {
     })
 }
 
+fn update_space_events(space_id: u32, events: Vec<types::event::Event>) {
+    let space = get_space(space_id);
+    if space.is_none() {
+        return;
+    }
+    let space = space.unwrap();
+    let mut new_space = space.clone();
+    new_space.events = events;
+
+    SPACES.with(|spaces_ref| {
+        let mut spaces = spaces_ref.borrow_mut();
+        spaces.insert(space_id, new_space.clone());
+    });
+}
+
 //PROPOSALS
 #[update]
 fn insert_proposal(
@@ -160,20 +177,19 @@ fn insert_proposal(
 
     let mut new_options: Vec<ProposalOption> = Vec::new();
     let mut option_id = 1;
-    
-    for option in options.iter() {
-     new_options.push(ProposalOption {
-        id: option_id,
-        name: option.name.clone(),
-        on_win_contract_address:"".to_string(),
-        on_win_bytecode: "".to_string(),
-        on_win_chain_id: 0,
-        proposal_id: id,
-        votes: Vec::new(),
-     });
-     option_id += 1;
-    }
 
+    for option in options.iter() {
+        new_options.push(ProposalOption {
+            id: option_id,
+            name: option.name.clone(),
+            on_win_contract_address: "".to_string(),
+            on_win_bytecode: "".to_string(),
+            on_win_chain_id: 0,
+            proposal_id: id,
+            votes: Vec::new(),
+        });
+        option_id += 1;
+    }
 
     let new_proposal = types::proposal::Proposal {
         id,
@@ -734,6 +750,42 @@ fn delete_strategy(space_id: u32, strategy_id: u32) -> Option<Strategy> {
     update_strategies(space_id, new_strategies);
 
     Some(strategy.clone())
+}
+
+//EVENTS
+#[query]
+fn get_events_by_space(space_id: u32) -> Option<Vec<types::event::Event>> {
+    let space = get_space(space_id);
+    if space.is_none() {
+        return None;
+    }
+    let events = space.unwrap().events.clone();
+    Some(events)
+}
+
+#[update]
+fn insert_event(
+    space_id: u32,
+    event_type: u32,
+    webhook_url: String,
+    payload: String,
+) -> Option<types::event::Event> {
+    let space = get_space(space_id);
+    if space.is_none() {
+        return None;
+    }
+    let mut events = space.unwrap().events;
+    let new_event = types::event::Event {
+        event_type: event_type,
+        webhook_url,
+        payload,
+        space_id,
+    };
+
+    events.push(new_event.clone());
+    update_space_events(space_id, events);
+
+    Some(new_event)
 }
 
 ic_cdk::export_candid!();

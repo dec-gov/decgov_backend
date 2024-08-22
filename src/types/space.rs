@@ -3,6 +3,7 @@ use ic_stable_structures::{storable::Bound, Storable};
 use std::borrow::Cow;
 
 use super::proposal::Proposal;
+use super::event::Event;
 use super::strategy::Strategy;
 
 const MAX_VALUE_SIZE: u32 = 1000;
@@ -20,6 +21,7 @@ pub struct Space {
     pub quorum: Nat,
     pub proposals: Vec<Proposal>,
     pub strategies: Vec<Strategy>,
+    pub events: Vec<Event>,
 
 }
 
