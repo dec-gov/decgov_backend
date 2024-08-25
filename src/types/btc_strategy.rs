@@ -5,14 +5,11 @@ use std::borrow::Cow;
 const MAX_VALUE_SIZE: u32 = 1000;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct EvmStrategy {
-    pub strategy_id: u32,
-    pub chain_id: u64,
-    pub contract_address: String,
-    pub bytecode: String,
+pub struct BtcStrategy {
+    // TODO
 }
 
-impl Storable for EvmStrategy{
+impl Storable for BtcStrategy{
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }

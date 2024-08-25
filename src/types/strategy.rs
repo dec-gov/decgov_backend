@@ -2,7 +2,7 @@ use candid::{CandidType, Decode, Deserialize, Encode};
 use ic_stable_structures::{storable::Bound, Storable};
 use std::borrow::Cow;
 
-use super::evm_strategy::EvmStrategy;
+use super::{btc_strategy::BtcStrategy, evm_strategy::EvmStrategy};
 
 const MAX_VALUE_SIZE: u32 = 1000;
 
@@ -12,7 +12,7 @@ pub struct Strategy {
     pub name: String,
     pub description: String,
     pub space_id: u32,
-    pub evm_strategy : Option<EvmStrategy>
+    pub data: StrategyData
 }
 
 impl Storable for Strategy {
@@ -28,4 +28,10 @@ impl Storable for Strategy {
         max_size: MAX_VALUE_SIZE,
         is_fixed_size: false,
     };
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub enum StrategyData {
+    Evm(EvmStrategy),
+    Btc(BtcStrategy)
 }

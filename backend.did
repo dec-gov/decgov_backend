@@ -1,8 +1,14 @@
 type Event = record {
-  webhook_url : text;
-  event_type : nat32;
-  payload : text;
+  data : EventData;
+  event_type : EventType;
   space_id : nat32;
+};
+type EventData = variant { Evm : EvmEvent; Webhook : WebhookEvent };
+type EventType = variant { ProposalEnded; Vote; ProposalCreated };
+type EvmEvent = record {
+  config_str : text;
+  chain_id : nat32;
+  contract_address : text;
 };
 type EvmStrategy = record {
   strategy_id : nat32;
@@ -50,16 +56,18 @@ type Space = record {
   min_vote_role : nat32;
   min_vote_power : nat;
   proposals : vec Proposal;
+  owner_address : text;
   quorum : nat;
   strategies : vec Strategy;
 };
 type Strategy = record {
   id : nat32;
+  data : StrategyData;
   name : text;
   description : text;
-  evm_strategy : opt EvmStrategy;
   space_id : nat32;
 };
+type StrategyData = variant { Btc : record {}; Evm : EvmStrategy };
 type VoteData = record { signature : text; message : VoteMessage };
 type VoteMessage = record {
   option_id : nat32;
@@ -68,6 +76,7 @@ type VoteMessage = record {
   block_height : opt text;
   space_id : nat32;
 };
+type WebhookEvent = record { webhook_url : text; payload : text };
 service : {
   delete_proposal : (nat32, nat32) -> (opt Proposal);
   delete_proposal_option : (nat32, nat32, nat32) -> (opt ProposalOption);
@@ -85,7 +94,7 @@ service : {
   get_strategy : (nat32, nat32) -> (opt Strategy) query;
   get_vote : (nat32, nat32, nat32, nat32) -> (opt ProposalOptionVote) query;
   get_votes : (nat32, nat32, nat32) -> (opt vec ProposalOptionVote) query;
-  insert_event : (nat32, nat32, text, text) -> (opt Event);
+  insert_event : (nat32, EventType, EventData) -> (opt Event);
   insert_evm_strategy : (nat32, nat32, text, text, EvmStrategy) -> (
       opt Strategy,
     );
@@ -95,7 +104,9 @@ service : {
   insert_proposal_option : (nat32, nat32, text, text, text, nat32) -> (
       opt ProposalOption,
     );
-  insert_space : (text, text, text, nat32, nat32, nat32, nat, nat) -> (Space);
+  insert_space : (text, text, text, text, nat32, nat32, nat32, nat, nat) -> (
+      Space,
+    );
   insert_vote : (nat32, nat32, nat32, text, nat32, nat64, text, nat) -> (
       opt ProposalOption,
     );
@@ -103,9 +114,18 @@ service : {
       opt Strategy,
     );
   update_proposal : (nat32, nat32, text, text, nat32) -> (opt Proposal);
-  update_space : (nat32, text, text, text, nat32, nat32, nat32, nat, nat) -> (
-      opt Space,
-    );
+  update_space : (
+      nat32,
+      text,
+      text,
+      text,
+      text,
+      nat32,
+      nat32,
+      nat32,
+      nat,
+      nat,
+    ) -> (opt Space);
   update_space_proposals : (nat32, vec Proposal) -> ();
   update_strategies : (nat32, vec Strategy) -> ();
   update_vote : (nat32, nat32, nat32, nat32, text, nat32, nat64, text, nat) -> (
