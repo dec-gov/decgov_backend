@@ -9,7 +9,7 @@ const MAX_VALUE_SIZE: u32 = 1000;
 #[derive(CandidType, Deserialize, Debug, Clone)]
 
 pub struct Event {
-    pub event_type: EventType,
+    pub event_trigger: EventTrigger,
     pub space_id: u32,
     pub data: EventData
 }
@@ -27,7 +27,7 @@ impl Storable for Event {
 }
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug, Clone)]
-pub enum EventType {
+pub enum EventTrigger {
     ProposalCreated,
     ProposalEnded,
     Vote,
