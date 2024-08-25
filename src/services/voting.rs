@@ -1,3 +1,4 @@
+use core::panic;
 use std::collections::HashMap;
 
 use candid::Nat;
@@ -11,7 +12,13 @@ use ic_cdk::{
 
 use crate::{
     get_strategies, insert_vote,
-    types::{event::{Event, EventType}, strategy::Strategy, vote::VoteData},
+    types::{
+        event::{Event, EventData, EventType},
+        evm_event::EvmEvent,
+        strategy::{Strategy, StrategyData},
+        vote::VoteData,
+        webhook_event::WebhookEvent,
+    },
 };
 
 use super::eth_rpc::eth_call;
@@ -106,30 +113,37 @@ async fn trigger_events(space_id: u32, event_type: EventType, event_data: HashMa
             continue;
         }
 
-        let mut payload = event.payload;
-
-        for (key, value) in event_data.iter() {
-            let new_key = format!("${{{}}}", key);
-            payload = payload.replace(&new_key, &value);
+        match event.data {
+            EventData::Webhook(data) => handle_webhook_event(data, &event_data).await,
+            EventData::Evm(_) => panic!("Evm events are not implemented yet"),
         }
-
-        let json_utf8: Vec<u8> = payload.into_bytes();
-        let request_body: Option<Vec<u8>> = Some(json_utf8);
-
-        let request = CanisterHttpRequestArgument {
-            url: event.webhook_url,
-            method: HttpMethod::POST,
-            max_response_bytes: None,
-            headers: vec![HttpHeader {
-                name: String::from("Content-Type"),
-                value: String::from("application/json"),
-            }],
-            body: request_body,
-            transform: None,
-        };
-
-        http_request(request, 2_000_000_000).await.unwrap();
     }
+}
+
+async fn handle_webhook_event(event: WebhookEvent, event_data: &HashMap<&str, String>) {
+    let mut payload = event.payload;
+
+    for (key, value) in event_data.iter() {
+        let new_key = format!("${{{}}}", key);
+        payload = payload.replace(&new_key, &value);
+    }
+
+    let json_utf8: Vec<u8> = payload.into_bytes();
+    let request_body: Option<Vec<u8>> = Some(json_utf8);
+
+    let request = CanisterHttpRequestArgument {
+        url: event.webhook_url,
+        method: HttpMethod::POST,
+        max_response_bytes: None,
+        headers: vec![HttpHeader {
+            name: String::from("Content-Type"),
+            value: String::from("application/json"),
+        }],
+        body: request_body,
+        transform: None,
+    };
+
+    http_request(request, 2_000_000_000).await.unwrap();
 }
 
 async fn call_strategy(
@@ -137,29 +151,27 @@ async fn call_strategy(
     strategy: &Strategy,
     block_height: Option<String>,
 ) -> Result<Nat, String> {
-    if strategy.evm_strategy.is_none() {
-        return Err("Only EVM strategies are supported for now".into());
-    }
+    if let StrategyData::Evm(ref evm_strategy) = strategy.data {
+        let str_address = format!("{:x}", &address).replace("0x", "");
+        let data = evm_strategy
+            .config_str
+            .clone()
+            .replace("$voterAddress", &str_address);
 
-    let evm_strategy = strategy.evm_strategy.as_ref().unwrap();
+        let response = eth_call(evm_strategy.contract_address.clone(), data, block_height).await;
 
-    let str_address = format!("{:x}", &address).replace("0x", "");
-    let data = evm_strategy
-        .config_str
-        .clone()
-        .replace("$voterAddress", &str_address);
+        if let Ok(value) = response {
+            if value == "0x" {
+                return Ok(Nat::from(0 as u8));
+            }
 
-    let response = eth_call(evm_strategy.contract_address.clone(), data, block_height).await;
-
-    if let Ok(value) = response {
-        if value == "0x" {
-            return Ok(Nat::from(0 as u8));
+            Ok(Nat::from(
+                u128::from_str_radix(&value.trim_start_matches("0x"), 16).unwrap(),
+            ))
+        } else {
+            Err("Unable to parse response from contract call".into())
         }
-
-        Ok(Nat::from(
-            u128::from_str_radix(&value.trim_start_matches("0x"), 16).unwrap(),
-        ))
     } else {
-        Err("Unable to parse response from contract call".into())
+        Err("Only EVM strategies are supported for now".into())
     }
 }

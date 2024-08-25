@@ -8,12 +8,13 @@ use ic_cdk_macros::query;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use std::cell::RefCell;
+use types::event::{EventData, EventType};
 use types::evm_strategy::{self, EvmStrategy};
 use types::proposal::Proposal;
 use types::proposal_option_vote::ProposalOptionVote;
 use types::proposal_options::{InsertProposalOption, ProposalOption};
 use types::space::Space;
-use types::strategy::Strategy;
+use types::strategy::{Strategy, StrategyData};
 use types::vote::VoteData;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -679,7 +680,7 @@ fn insert_evm_strategy(
         name,
         description,
         space_id,
-        evm_strategy: Some(evm_strategy),
+        data: StrategyData::Evm(evm_strategy),
     };
 
     strategies.push(new_strategy.clone());
@@ -723,7 +724,7 @@ fn update_evm_strategy(
         name,
         description,
         space_id,
-        evm_strategy: Some(evm_strategy),
+        data: StrategyData::Evm(evm_strategy),
     };
 
     let index = strategies.iter().position(|s| s.id == strategy_id).unwrap();
@@ -770,9 +771,8 @@ fn get_events_by_space(space_id: u32) -> Option<Vec<types::event::Event>> {
 #[update]
 fn insert_event(
     space_id: u32,
-    event_type: u32,
-    webhook_url: String,
-    payload: String,
+    event_type: EventType,
+    data: EventData,
 ) -> Option<types::event::Event> {
     let space = get_space(space_id);
     if space.is_none() {
@@ -780,10 +780,9 @@ fn insert_event(
     }
     let mut events = space.unwrap().events;
     let new_event = types::event::Event {
-        event_type: event_type,
-        webhook_url,
-        payload,
+        event_type,
         space_id,
+        data,
     };
 
     events.push(new_event.clone());

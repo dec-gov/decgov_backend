@@ -2,20 +2,14 @@ use candid::{CandidType, Decode, Deserialize, Encode};
 use ic_stable_structures::{storable::Bound, Storable};
 use std::borrow::Cow;
 
-use super::{btc_strategy::BtcStrategy, evm_strategy::EvmStrategy};
-
 const MAX_VALUE_SIZE: u32 = 1000;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct Strategy {
-    pub id: u32,
-    pub name: String,
-    pub description: String,
-    pub space_id: u32,
-    pub data: StrategyData
+pub struct BtcStrategy {
+    // TODO
 }
 
-impl Storable for Strategy {
+impl Storable for BtcStrategy{
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
@@ -28,10 +22,4 @@ impl Storable for Strategy {
         max_size: MAX_VALUE_SIZE,
         is_fixed_size: false,
     };
-}
-
-#[derive(CandidType, Deserialize, Debug, Clone)]
-pub enum StrategyData {
-    Evm(EvmStrategy),
-    Btc(BtcStrategy)
 }
