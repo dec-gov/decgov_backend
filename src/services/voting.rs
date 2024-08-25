@@ -106,7 +106,7 @@ async fn get_voting_power(
 }
 
 async fn trigger_events(space_id: u32, event_trigger: EventTrigger, event_data: HashMap<&str, String>) {
-    let events: Vec<Event> = vec![];
+    let events: Vec<Event> = get_events_by_space(space_id).expect("Invalid space id");
 
     for event in events.into_iter() {
         if event.event_trigger != event_trigger {
