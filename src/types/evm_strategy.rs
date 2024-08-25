@@ -9,7 +9,7 @@ pub struct EvmStrategy {
     pub strategy_id: u32,
     pub chain_id: u64,
     pub contract_address: String,
-    pub config_str: String,
+    pub bytecode: String,
 }
 
 impl Storable for EvmStrategy{

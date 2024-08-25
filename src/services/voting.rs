@@ -154,7 +154,7 @@ async fn call_strategy(
     if let StrategyData::Evm(ref evm_strategy) = strategy.data {
         let str_address = format!("{:x}", &address).replace("0x", "");
         let data = evm_strategy
-            .config_str
+            .bytecode
             .clone()
             .replace("$voterAddress", &str_address);
 
