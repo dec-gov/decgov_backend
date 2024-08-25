@@ -11,7 +11,7 @@ use ic_cdk::{
 
 use crate::{
     get_strategies, insert_vote,
-    types::{event::Event, strategy::Strategy, vote::VoteData},
+    types::{event::{Event, EventType}, strategy::Strategy, vote::VoteData},
 };
 
 use super::eth_rpc::eth_call;
@@ -42,7 +42,7 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
 
     trigger_events(
         data.message.space_id,
-        0,
+        EventType::Vote,
         HashMap::from([
             ("power", voting_power.to_string()),
             ("address", data.message.address.clone()),
@@ -98,7 +98,7 @@ async fn get_voting_power(
     return Ok(total_voting_power);
 }
 
-async fn trigger_events(space_id: u32, event_type: u32, event_data: HashMap<&str, String>) {
+async fn trigger_events(space_id: u32, event_type: EventType, event_data: HashMap<&str, String>) {
     let events: Vec<Event> = vec![];
 
     for event in events.into_iter() {
