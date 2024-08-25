@@ -6,7 +6,7 @@ use super::proposal::Proposal;
 use super::event::Event;
 use super::strategy::Strategy;
 
-const MAX_VALUE_SIZE: u32 = 1000;
+const MAX_VALUE_SIZE: u32 = 400;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct Space {
@@ -34,8 +34,5 @@ impl Storable for Space {
         Decode!(bytes.as_ref(), Self).unwrap()
     }
 
-    const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_VALUE_SIZE,
-        is_fixed_size: false,
-    };
+    const BOUND: Bound = Bound::Unbounded;
 }
