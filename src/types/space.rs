@@ -14,6 +14,7 @@ pub struct Space {
     pub name: String,
     pub icon_link: String,
     pub website_link: String,
+    pub owner_address: String,
     pub vote_delay: u32,
     pub vote_duration: u32,
     pub min_vote_role: u32,
@@ -22,7 +23,6 @@ pub struct Space {
     pub proposals: Vec<Proposal>,
     pub strategies: Vec<Strategy>,
     pub events: Vec<Event>,
-
 }
 
 impl Storable for Space {
