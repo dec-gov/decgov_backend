@@ -13,7 +13,7 @@ use ic_cdk::{
 use crate::{
     get_strategies, insert_vote,
     types::{
-        event::{Event, EventData, EventType},
+        event::{Event, EventData, EventTrigger},
         evm_event::EvmEvent,
         strategy::{Strategy, StrategyData},
         vote::VoteData,
@@ -49,7 +49,7 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
 
     trigger_events(
         data.message.space_id,
-        EventType::Vote,
+        EventTrigger::Vote,
         HashMap::from([
             ("power", voting_power.to_string()),
             ("address", data.message.address.clone()),
@@ -105,11 +105,11 @@ async fn get_voting_power(
     return Ok(total_voting_power);
 }
 
-async fn trigger_events(space_id: u32, event_type: EventType, event_data: HashMap<&str, String>) {
+async fn trigger_events(space_id: u32, event_trigger: EventTrigger, event_data: HashMap<&str, String>) {
     let events: Vec<Event> = vec![];
 
     for event in events.into_iter() {
-        if event.event_type != event_type {
+        if event.event_trigger != event_trigger {
             continue;
         }
 

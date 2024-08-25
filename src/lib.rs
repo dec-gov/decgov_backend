@@ -8,7 +8,7 @@ use ic_cdk_macros::query;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
 use std::cell::RefCell;
-use types::event::{EventData, EventType};
+use types::event::{EventData, EventTrigger};
 use types::evm_strategy::{self, EvmStrategy};
 use types::proposal::Proposal;
 use types::proposal_option_vote::ProposalOptionVote;
@@ -771,7 +771,7 @@ fn get_events_by_space(space_id: u32) -> Option<Vec<types::event::Event>> {
 #[update]
 fn insert_event(
     space_id: u32,
-    event_type: EventType,
+    event_trigger: EventTrigger,
     data: EventData,
 ) -> Option<types::event::Event> {
     let space = get_space(space_id);
@@ -780,7 +780,7 @@ fn insert_event(
     }
     let mut events = space.unwrap().events;
     let new_event = types::event::Event {
-        event_type,
+        event_trigger,
         space_id,
         data,
     };
