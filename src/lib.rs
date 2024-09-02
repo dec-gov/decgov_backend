@@ -664,7 +664,6 @@ fn get_strategy(space_id: u32, strategy_id: u32) -> Option<Strategy> {
 #[update]
 fn insert_evm_strategy(
     space_id: u32,
-    strategy_id: u32,
     name: String,
     description: String,
     evm_strategy: EvmStrategy,
