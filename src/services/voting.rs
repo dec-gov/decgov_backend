@@ -11,10 +11,9 @@ use ic_cdk::{
 };
 
 use crate::{
-    get_events_by_space, get_strategies, insert_vote,
+    get_events_by_space, get_proposal, get_space, get_strategies, insert_vote,
     types::{
         event::{Event, EventData, EventTrigger},
-        evm_event::EvmEvent,
         strategy::{Strategy, StrategyData},
         vote::VoteData,
         webhook_event::WebhookEvent,
@@ -47,6 +46,33 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         return Err("Insufficient voting power".to_owned());
     }
 
+    let space = get_space(data.message.space_id);
+    let proposal = get_proposal(data.message.space_id, data.message.proposal_id);
+
+    if space.is_none() || proposal.is_none() {
+        return Err("Invalid vote message".to_owned());
+    }
+
+    let (space, proposal) = (space.unwrap(), proposal.unwrap());
+    let vote_timestamp = ic_cdk::api::time() / 1_000_000_000;
+
+    if (proposal.date_created + space.vote_delay as u64) > vote_timestamp
+        || (proposal.date_created + space.vote_duration as u64) < vote_timestamp
+    {
+        return Err("Voting is not available for this proposal".to_owned());
+    }
+
+    insert_vote(
+        data.message.space_id,
+        data.message.proposal_id,
+        data.message.option_id,
+        data.message.address.clone(),
+        0,
+        vote_timestamp,
+        data.signature,
+        voting_power.clone(),
+    );
+
     trigger_events(
         data.message.space_id,
         EventTrigger::Vote,
@@ -56,17 +82,6 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         ]),
     )
     .await;
-
-    insert_vote(
-        data.message.space_id,
-        data.message.proposal_id,
-        data.message.option_id,
-        data.message.address,
-        0,
-        ic_cdk::api::time() / 1_000_000_000,
-        data.signature,
-        voting_power.clone(),
-    );
 
     Ok(voting_power)
 }
@@ -105,7 +120,11 @@ async fn get_voting_power(
     return Ok(total_voting_power);
 }
 
-async fn trigger_events(space_id: u32, event_trigger: EventTrigger, event_data: HashMap<&str, String>) {
+async fn trigger_events(
+    space_id: u32,
+    event_trigger: EventTrigger,
+    event_data: HashMap<&str, String>,
+) {
     let events: Vec<Event> = get_events_by_space(space_id).expect("Invalid space id");
 
     for event in events.into_iter() {
