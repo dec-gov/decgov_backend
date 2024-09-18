@@ -56,8 +56,14 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
     let (space, proposal) = (space.unwrap(), proposal.unwrap());
     let vote_timestamp = ic_cdk::api::time() / 1_000_000_000;
 
+    // date_created = 10s
+    // vote_delay = 3s
+    // vote_duration = 60s
+    // 0s -------------- 10s -------------- 13s ------------- 73s ------------- inf s
+    //           proposal created       voting available    voting finished
     if (proposal.date_created + space.vote_delay as u64) > vote_timestamp
-        || (proposal.date_created + space.vote_duration as u64) < vote_timestamp
+        || (proposal.date_created + space.vote_duration as u64 + space.vote_delay as u64)
+            < vote_timestamp
     {
         return Err("Voting is not available for this proposal".to_owned());
     }
