@@ -11,9 +11,10 @@ use ic_cdk::{
 };
 
 use crate::{
-    get_events_by_space, get_proposal, get_space, get_strategies, insert_vote,
+    get_events_by_space, get_proposal, get_space, get_strategies, get_votes, insert_vote,
     types::{
         event::{Event, EventData, EventTrigger},
+        space,
         strategy::{Strategy, StrategyData},
         vote::VoteData,
         webhook_event::WebhookEvent,
@@ -24,13 +25,17 @@ use super::eth_rpc::eth_call;
 
 #[update]
 async fn vote(data: VoteData) -> Result<Nat, String> {
+    ic_cdk::println!("STARTING TO VOTE");
+
     let message_json = serde_json::to_string(&data.message).unwrap();
     let signature = data.signature.parse::<Signature>().unwrap();
 
+    ic_cdk::println!("HUEH UHE MESAHE JSON: {message_json}");
     let recovered_address = signature.recover(message_json).unwrap();
     let parsed_address = data.message.address.parse::<Address>().unwrap();
 
     if recovered_address != parsed_address {
+        ic_cdk::println!("recovered = {recovered_address} | parsed = {parsed_address} ");
         return Err("Invalid signature".to_owned());
     }
 
@@ -42,10 +47,6 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         .await
         .unwrap();
 
-    if voting_power == 0 as u32 {
-        return Err("Insufficient voting power".to_owned());
-    }
-
     let space = get_space(data.message.space_id);
     let proposal = get_proposal(data.message.space_id, data.message.proposal_id);
 
@@ -54,6 +55,11 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
     }
 
     let (space, proposal) = (space.unwrap(), proposal.unwrap());
+
+    if voting_power < space.min_vote_power {
+        return Err("Insufficient voting power".to_owned());
+    }
+
     let vote_timestamp = ic_cdk::api::time() / 1_000_000_000;
 
     // date_created = 10s
@@ -68,6 +74,18 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         return Err("Voting is not available for this proposal".to_owned());
     }
 
+    ic_cdk::println!("INSERTING VOTE");
+
+    if let Some(votes) = get_votes(
+        data.message.space_id,
+        data.message.proposal_id,
+        data.message.option_id,
+    ) {
+        if votes.iter().any(|x| x.user_address == data.message.address) {
+            return Err("User has alread voted".to_owned());
+        }
+    }
+
     insert_vote(
         data.message.space_id,
         data.message.proposal_id,
@@ -79,6 +97,8 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         voting_power.clone(),
     );
 
+    ic_cdk::println!("TRIGGERING EVENTS");
+
     trigger_events(
         data.message.space_id,
         EventTrigger::Vote,
@@ -88,6 +108,8 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         ]),
     )
     .await;
+
+    ic_cdk::println!("HURAAA {voting_power}");
 
     Ok(voting_power)
 }
