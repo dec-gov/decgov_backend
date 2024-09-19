@@ -134,7 +134,7 @@ pub async fn call(data: String) -> Result<String, String> {
         CANISTER_ID,
         "eth_sendRawTransaction",
         (
-            RpcServices::EthMainnet(None),
+            RpcServices::EthSepolia(None),
             None::<RpcConfig>,
             data.clone(),
         ),
@@ -182,7 +182,7 @@ async fn next_id() -> Nat {
         CANISTER_ID,
         "eth_getTransactionCount",
         (
-            RpcService::EthMainnet(EthMainnetService::BlockPi),
+            RpcService::EthSepolia(EthSepoliaService::BlockPi),
             None::<RpcConfig>,
             GetTransactionCountArgs {
                 address: get_self_eth_address().await,
