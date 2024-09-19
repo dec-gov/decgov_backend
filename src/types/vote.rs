@@ -3,11 +3,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(CandidType, Deserialize, Debug, Clone, Default, Serialize)]
 pub struct VoteMessage {
-    pub address: String,
     pub proposal_id: u32,
     pub space_id: u32,
     pub option_id: u32,
-    pub block_height: Option<String>,
+    pub address: String,
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone, Default)]

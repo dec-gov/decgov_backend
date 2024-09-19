@@ -73,7 +73,6 @@ type VoteMessage = record {
   option_id : nat32;
   address : text;
   proposal_id : nat32;
-  block_height : opt text;
   space_id : nat32;
 };
 type WebhookEvent = record { webhook_url : text; payload : text };
