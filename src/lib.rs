@@ -7,13 +7,16 @@ use ic_cdk::update;
 use ic_cdk_macros::query;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap};
+use services::events::trigger_events;
 use std::cell::RefCell;
+use std::collections::HashMap;
+use std::time::Duration;
 use types::event::{EventData, EventTrigger};
 use types::evm_strategy::{self, EvmStrategy};
 use types::proposal::Proposal;
 use types::proposal_option_vote::ProposalOptionVote;
 use types::proposal_options::{InsertProposalOption, ProposalOption};
-use types::space::Space;
+use types::space::{self, Space};
 use types::strategy::{Strategy, StrategyData};
 use types::vote::VoteData;
 
@@ -164,7 +167,7 @@ fn update_space_events(space_id: u32, events: Vec<types::event::Event>) {
 
 //PROPOSALS
 #[update]
-fn insert_proposal(
+async fn insert_proposal(
     space_id: u32,
     title: String,
     description: String,
@@ -175,7 +178,8 @@ fn insert_proposal(
     if space.is_none() {
         return None;
     }
-    let mut proposals = space.unwrap().proposals;
+    let space = space.unwrap();
+    let mut proposals = space.proposals;
     let id = proposals.len() as u32 + 1;
     // Convert nanoseconds to seconds
     let date_created = ic_cdk::api::time() / 1_000_000_000;
@@ -198,8 +202,8 @@ fn insert_proposal(
 
     let new_proposal = types::proposal::Proposal {
         id,
-        title,
-        description,
+        title: title.clone(),
+        description: description.clone(),
         date_created,
         mechanism,
         space_id,
@@ -208,6 +212,33 @@ fn insert_proposal(
 
     proposals.push(new_proposal.clone());
     update_space_proposals(space_id, proposals);
+
+    trigger_events(
+        space_id,
+        EventTrigger::ProposalCreated,
+        HashMap::from([
+            ("title", title.to_string()),
+            ("description", description.to_string()),
+        ]),
+    )
+    .await;
+
+    ic_cdk_timers::set_timer(
+        Duration::from_secs((space.vote_delay + space.vote_duration) as u64),
+        move || {
+            ic_cdk::spawn(async move {
+                trigger_events(
+                    space_id,
+                    EventTrigger::ProposalEnded,
+                    HashMap::from([
+                        ("title", title.to_string()),
+                        ("description", description.to_string()),
+                    ]),
+                )
+                .await;
+            });
+        },
+    );
 
     Some(new_proposal)
 }
