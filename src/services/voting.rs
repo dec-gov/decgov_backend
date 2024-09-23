@@ -10,6 +10,8 @@ use ic_cdk::{
     update,
 };
 
+use crate::services::events::trigger_events;
+
 use crate::{
     get_events_by_space, get_proposal, get_space, get_strategies, get_votes, insert_vote,
     types::{
@@ -25,27 +27,19 @@ use super::eth_rpc::eth_call;
 
 #[update]
 async fn vote(data: VoteData) -> Result<Nat, String> {
-    ic_cdk::println!("STARTING TO VOTE");
-
     let message_json = serde_json::to_string(&data.message).unwrap();
     let signature = data.signature.parse::<Signature>().unwrap();
 
-    ic_cdk::println!("HUEH UHE MESAHE JSON: {message_json}");
     let recovered_address = signature.recover(message_json).unwrap();
     let parsed_address = data.message.address.parse::<Address>().unwrap();
 
     if recovered_address != parsed_address {
-        ic_cdk::println!("recovered = {recovered_address} | parsed = {parsed_address} ");
         return Err("Invalid signature".to_owned());
     }
 
     if !data.message.address.starts_with("0x") {
         return Err("Only Ethereum address is supported for now".into());
     }
-
-    let voting_power = get_voting_power(&recovered_address, data.message.space_id, None)
-        .await
-        .unwrap();
 
     let space = get_space(data.message.space_id);
     let proposal = get_proposal(data.message.space_id, data.message.proposal_id);
@@ -55,11 +49,6 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
     }
 
     let (space, proposal) = (space.unwrap(), proposal.unwrap());
-
-    if voting_power < space.min_vote_power {
-        return Err("Insufficient voting power".to_owned());
-    }
-
     let vote_timestamp = ic_cdk::api::time() / 1_000_000_000;
 
     // date_created = 10s
@@ -74,16 +63,20 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         return Err("Voting is not available for this proposal".to_owned());
     }
 
-    ic_cdk::println!("INSERTING VOTE");
+    let voting_power = get_voting_power(&recovered_address, data.message.space_id, None)
+        .await
+        .unwrap();
 
-    if let Some(votes) = get_votes(
-        data.message.space_id,
-        data.message.proposal_id,
-        data.message.option_id,
-    ) {
-        if votes.iter().any(|x| x.user_address == data.message.address) {
-            return Err("User has alread voted".to_owned());
-        }
+    if voting_power < space.min_vote_power {
+        return Err("Insufficient voting power".to_owned());
+    }
+
+    if proposal.options.iter().any(|opt| {
+        opt.votes
+            .iter()
+            .any(|vote| vote.user_address == data.message.address)
+    }) {
+        return Err("User has already voted".to_owned());
     }
 
     insert_vote(
@@ -97,8 +90,6 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         voting_power.clone(),
     );
 
-    ic_cdk::println!("TRIGGERING EVENTS");
-
     trigger_events(
         data.message.space_id,
         EventTrigger::Vote,
@@ -108,8 +99,6 @@ async fn vote(data: VoteData) -> Result<Nat, String> {
         ]),
     )
     .await;
-
-    ic_cdk::println!("HURAAA {voting_power}");
 
     Ok(voting_power)
 }
@@ -146,51 +135,6 @@ async fn get_voting_power(
     }
 
     return Ok(total_voting_power);
-}
-
-async fn trigger_events(
-    space_id: u32,
-    event_trigger: EventTrigger,
-    event_data: HashMap<&str, String>,
-) {
-    let events: Vec<Event> = get_events_by_space(space_id).expect("Invalid space id");
-
-    for event in events.into_iter() {
-        if event.event_trigger != event_trigger {
-            continue;
-        }
-
-        match event.data {
-            EventData::Webhook(data) => handle_webhook_event(data, &event_data).await,
-            EventData::Evm(_) => panic!("Evm events are not implemented yet"),
-        }
-    }
-}
-
-async fn handle_webhook_event(event: WebhookEvent, event_data: &HashMap<&str, String>) {
-    let mut payload = event.payload;
-
-    for (key, value) in event_data.iter() {
-        let new_key = format!("${{{}}}", key);
-        payload = payload.replace(&new_key, &value);
-    }
-
-    let json_utf8: Vec<u8> = payload.into_bytes();
-    let request_body: Option<Vec<u8>> = Some(json_utf8);
-
-    let request = CanisterHttpRequestArgument {
-        url: event.webhook_url,
-        method: HttpMethod::POST,
-        max_response_bytes: None,
-        headers: vec![HttpHeader {
-            name: String::from("Content-Type"),
-            value: String::from("application/json"),
-        }],
-        body: request_body,
-        transform: None,
-    };
-
-    http_request(request, 2_000_000_000).await.unwrap();
 }
 
 async fn call_strategy(
